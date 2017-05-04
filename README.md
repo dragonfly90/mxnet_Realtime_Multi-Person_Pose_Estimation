@@ -20,6 +20,7 @@ Parameters are not uploaded yet, too big.
 - [x] Test demo
 - [x] Train demo
 - [ ] Add image augmentation: rotation, flip
+- [ ] Train all images
 - [ ] Train from vgg model
 - [ ] image read and augmentation in C++
 
