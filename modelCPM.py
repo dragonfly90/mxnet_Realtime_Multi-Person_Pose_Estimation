@@ -225,7 +225,7 @@ def mxnetModule():
 
 def intializeModel(sym):
 
-    output_prefix = 'humanPose'
+    output_prefix = '../realtimePose'
     temsym, arg_params, aux_params = mx.model.load_checkpoint(output_prefix, 0)
 
     cmodel = mx.mod.Module(symbol=sym,

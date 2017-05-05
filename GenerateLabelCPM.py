@@ -283,7 +283,7 @@ def generateLabelMap(img_aug, meta):
     stride = 8
     grid_x = augmentcols / stride
     grid_y = augmentrows / stride
-    sigma = 10
+    sigma = 7.0
 
     heat_map = list()
     for i in range(19):
