@@ -19,7 +19,7 @@ Parameters are not uploaded yet, too big.
 ## TODO:
 - [x] Test demo
 - [x] Train demo
-- [] Add weight vector
+- [ ] Add weight vector
 - [ ] Add image augmentation: rotation, flip
 - [ ] Train all images
 - [ ] Train from vgg model
