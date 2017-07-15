@@ -14,7 +14,9 @@ Realtime Multi-Person 2D Pose Estimation using Part Affinity Fields
   
 https://github.com/CMU-Perceptual-Computing-Lab/caffe_rtpose
 
-Parameters are not uploaded yet, too big. 
+Parameters are uploaded to google drive:
+
+https://drive.google.com/drive/folders/0BzffphMuhDDMV0RZVGhtQWlmS1U
 
 ## TODO:
 - [x] Test demo
