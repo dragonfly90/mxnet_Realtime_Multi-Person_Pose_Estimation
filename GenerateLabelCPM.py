@@ -15,8 +15,6 @@ import PIL.Image
 import math
 import time
 
-import caffe
-from caffe.proto import caffe_pb2
 
 from collections import namedtuple
 Point = namedtuple('Point', 'x y')

@@ -1,6 +1,3 @@
-import caffe
-from caffe.proto import caffe_pb2
-use_caffe = True
 import re
 from google.protobuf import text_format
 import mxnet as mx
