@@ -1,4 +1,4 @@
-# Reimplementation of human keypoint detection in mxnet
+### Reimplementation of human keypoint detection in mxnet
 
 1. You can download model and parameters from google drive:
 
@@ -10,7 +10,7 @@ or check caffe_to_mxnet folder to download original caffe model and transfer it 
 3. Train demo: train_model.ipynb
 
 
-### Paper Realtime Multi-Person 2D Pose Estimation using Part Affinity Fields
+### Cite paper Realtime Multi-Person 2D Pose Estimation using Part Affinity Fields
 
 ```
 @article{cao2016realtime,
