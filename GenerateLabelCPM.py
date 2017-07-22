@@ -15,9 +15,6 @@ import PIL.Image
 import math
 import time
 
-#import caffe
-#from caffe.proto import caffe_pb2
-
 from collections import namedtuple
 Point = namedtuple('Point', 'x y')
 
@@ -25,8 +22,6 @@ crop_size_x = 368
 crop_size_y = 368
 center_perterb_max = 40
 
-
-#use_caffe = True
 
 scale_prob = 1
 scale_min = 0.5
