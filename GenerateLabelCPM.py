@@ -15,8 +15,8 @@ import PIL.Image
 import math
 import time
 
-import caffe
-from caffe.proto import caffe_pb2
+#import caffe
+#from caffe.proto import caffe_pb2
 
 from collections import namedtuple
 Point = namedtuple('Point', 'x y')
@@ -26,13 +26,18 @@ crop_size_y = 368
 center_perterb_max = 40
 
 
-use_caffe = True
+#use_caffe = True
 
 scale_prob = 1
 scale_min = 0.5
 scale_max = 1.1
 target_dist = 0.6
 
+def rotatePoint(R, pointDict):
+    NewPoint = {'x':0, 'y':0}
+    NewPoint['x'] = R[0,0]*pointDict['x']+R[0,1]*pointDict['y']+R[0,2]
+    NewPoint['y'] = R[1,0]*pointDict['x']+R[1,1]*pointDict['y']+R[1,2]
+    return NewPoint
 
 def readmeta(data):
     meta = copy.deepcopy(data)
@@ -139,8 +144,11 @@ def augmentation_scale(meta, oriImg):
     newmeta = copy.deepcopy(meta)
     dice2 = np.random.uniform()
     scale_multiplier = (scale_max - scale_min) * dice2 + scale_min
-    scale_abs = target_dist / newmeta['scale_provided']
-    scale = scale_abs * scale_multiplier
+    if newmeta['scale_provided']>0:
+        scale_abs = target_dist / newmeta['scale_provided']
+        scale = scale_abs * scale_multiplier
+    else:
+        scale = 1
 
     resizeImage = cv.resize(oriImg, (0, 0), fx=scale, fy=scale)
 
@@ -166,6 +174,47 @@ def onPlane(p, img_size):
         return False
     return True
 
+def augmentation_flip(meta, croppedImage):
+    dice = np.random.uniform()
+    newmeta = copy.deepcopy(meta)
+    if dice > 0.5: 
+        flipImage = cv.flip(croppedImage, 1)
+
+        newmeta['objpos'][0] =  newmeta['img_width'] - 1- newmeta['objpos'][0]
+
+        for i in range(len(meta['joint_self']['joints'])):
+            newmeta['joint_self']['joints'][i]['x'] = newmeta['img_width'] - 1- newmeta['joint_self']['joints'][i]['x']
+
+        for i in meta['joint_others']:
+            for j in range(len(meta['joint_others'][i]['joints'])):
+                newmeta['joint_others'][i]['joints'][j]['x'] = newmeta['img_width'] - 1 - newmeta['joint_others'][i]['joints'][j]['x']
+    else:
+        flipImage = croppedImage.copy()
+        
+    return (newmeta, flipImage)
+
+def augmentation_rotate(meta, flipimage):
+    newmeta = copy.deepcopy(meta)
+    
+    max_rotate_degree = 40
+    dice2 = np.random.uniform()
+    degree = (dice2 - 0.5)*2*max_rotate_degree
+    
+    #print degree
+    center = (368/2, 368/2)
+    
+    R = cv.getRotationMatrix2D(center, degree, 1.0)
+    
+    rotatedImage = cv.warpAffine(flipimage, R, (368,368))
+    
+    for i in range(len(meta['joint_self']['joints'])):
+        newmeta['joint_self']['joints'][i] = rotatePoint(R, newmeta['joint_self']['joints'][i])
+
+    for i in meta['joint_others']:
+        for j in range(len(meta['joint_others'][i]['joints'])):
+            newmeta['joint_others'][i]['joints'][j] = rotatePoint(R, newmeta['joint_others'][i]['joints'][j])
+    
+    return (newmeta, rotatedImage)
 
 def augmentation_croppad(meta, oriImg):
     dice_x = np.random.uniform()
@@ -341,6 +390,26 @@ def generateLabelMap(img_aug, meta):
 
     return (heat_map, pag_map)
 
+def getMask(imageIndex):
+    img = coco.loadImgs(imgIds[imageIndex])[0]
+    annIds = coco.getAnnIds(imgIds=img['id'], catIds=catIds, iscrowd=None)
+    anns = coco.loadAnns(annIds)
+    
+    nx, ny = img['width'], img['height']
+    maskall = np.zeros((ny, nx))
+
+    print(len(anns))
+    for i in range(len(anns)):    
+        seg = anns[i]['segmentation']
+        if anns[i]['num_keypoints']==0:
+            nlen = len(seg[0])
+            poly = zip(seg[0][0:nlen+2:2], seg[0][1:nlen+1:2])
+            img = Image.new("L", [nx, ny], 0)
+            ImageDraw.Draw(img).polygon(poly, outline=1, fill=1)
+            mask = np.array(img)
+            maskall = np.logical_or(mask, maskall)
+    
+    return ~maskall
 
 def getImageandLabel(iterjson):
 
@@ -352,8 +421,12 @@ def getImageandLabel(iterjson):
     newmeta, resizeImage = augmentation_scale(meta, oriImg)
 
     newmeta2, croppedImage = augmentation_croppad(newmeta, resizeImage)
+    
+    newmeta3, rotatedImage = augmentation_rotate(newmeta2, croppedImage)
+    
+    newmeta4, flipImage = augmentation_flip(newmeta3, rotatedImage)
 
-    heatmap, pagmap = generateLabelMap(croppedImage, newmeta2)
+    heatmap, pagmap = generateLabelMap(flipImage, newmeta4)
 
     return (croppedImage, heatmap, pagmap)
 
