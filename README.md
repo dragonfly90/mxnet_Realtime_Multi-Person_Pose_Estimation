@@ -1,13 +1,14 @@
 ### Reimplementation of human keypoint detection in mxnet
 
-1. You can download mxnet model and parameters from google drive:
+1. You can download mxnet model and parameters(coco and MPII) from google drive:
 
    https://drive.google.com/drive/folders/0BzffphMuhDDMV0RZVGhtQWlmS1U
 
    or check caffe_to_mxnet folder to download original caffe model and transfer it to mxnet model.
 
-2. Test demo: test_model.ipynb
-3. Train demo: train_model.ipynb
+2. Test demo based on model of coco dataset: testModel.ipynb
+3. Test demo based on model of MPII dataset: testModel_mpi.ipynb
+3. Train demo: TrainWeight.py
 
 
 ### Cite paper Realtime Multi-Person 2D Pose Estimation using Part Affinity Fields
