@@ -29,8 +29,9 @@ original caffe training https://github.com/CMU-Perceptual-Computing-Lab/caffe_rt
 - [x] Test demo
 - [x] Train demo
 - [x] Add image augmentation: rotation, flip
-- [ ] Add weight vector
-- [ ] Train all images
-- [ ] Train from vgg model
+- [x] Add weight vector
+- [x] Train all images
+- [x] Train from vgg model
+- [ ] evaluation code
 - [ ] image read and augmentation in C++
 
