@@ -36,3 +36,10 @@ original caffe training https://github.com/CMU-Perceptual-Computing-Lab/caffe_rt
 - [x] evaluation code
 - [ ] image read and augmentation in C++
 
+## Other implementations 
+
+Original Caffe https://github.com/CMU-Perceptual-Computing-Lab/caffe_rtpose
+
+pytorch https://github.com/tensorboy/pytorch_Realtime_Multi-Person_Pose_Estimation
+
+keras https://github.com/raymon-tian/keras_Realtime_Multi-Person_Pose_Estimation
