@@ -8,8 +8,8 @@
 
 2. Test demo based on model of coco dataset: testModel.ipynb
 3. Test demo based on model of MPII dataset: testModel_mpi.ipynb
-3. Train demo: TrainWeight.py
-
+4. Train demo: TrainWeight.py
+5. Evaluation on coco validation dataset : evaluation_coco.py
 
 ### Cite paper Realtime Multi-Person 2D Pose Estimation using Part Affinity Fields
 
