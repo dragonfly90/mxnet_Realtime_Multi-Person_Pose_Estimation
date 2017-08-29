@@ -107,9 +107,9 @@ def applyDNN(oriImg, images, sym1, arg_params1, aux_params1):
     transposeImage = np.transpose(np.float32(imageToTest_padded[:,:,:]), (2,0,1))/256 - 0.5
     testimage = transposeImage
     # print testimage.shape
-    cmodel = mx.mod.Module(symbol=sym1, label_names=[])
+    # cmodel = mx.mod.Module(symbol=sym1, label_names=[])
     # cmodel = mx.mod.Module(symbol=sym1, label_names=[], context=mx.gpu(0))
-    # cmodel = mx.mod.Module(symbol=sym1, context = mx.gpu(3), label_names=[])
+    cmodel = mx.mod.Module(symbol=sym1, context = mx.gpu(3), label_names=[])
     # cmodel = mx.mod.Module(symbol = sym1, label_names = []) 
     cmodel.bind(data_shapes=[('data', (1, 3, testimage.shape[1], testimage.shape[2]))])
     cmodel.init_params(arg_params=arg_params1, aux_params=aux_params1)
@@ -452,13 +452,13 @@ for i in range(imgIds_num):
                 if index > 0:
                     realpart = orderCOCO[part]-1
                     if part == 0:
-                        keypoints[realpart*3] = candidate[index][0] - 0.5
-                        keypoints[realpart*3+1] = candidate[index][1] - 0.5
+                        keypoints[realpart*3] = candidate[index][0]
+                        keypoints[realpart*3+1] = candidate[index][1]
                         keypoints[realpart*3+2] = 1
                         # score = score + candidate[index][2]
                     else:
-                        keypoints[(realpart)*3] = candidate[index][0] - 0.5
-                        keypoints[(realpart)*3+1] = candidate[index][1] - 0.5
+                        keypoints[(realpart)*3] = candidate[index][0]
+                        keypoints[(realpart)*3+1] = candidate[index][1]
                         keypoints[(realpart)*3+2] = 1
                         # score = score + candidate[index][2]
                         
@@ -482,9 +482,9 @@ prefix = 'person_keypoints' if annType=='keypoints' else 'instances'
 print 'Running demo for *%s* results.'%(annType)
 
 import json
-with open('evaluationResult.json', 'w') as outfile:
+with open('evaluationResultFixed.json', 'w') as outfile:
     json.dump(myjsonValidate, outfile)
-resJsonFile = 'evaluationResult.json'
+resJsonFile = 'evaluationResultFixed.json'
 cocoDt2 = cocoGt.loadRes(resJsonFile)
 
 image_ids = []
