@@ -8,8 +8,8 @@
 
 2. Test demo based on model of coco dataset: testModel.ipynb
 3. Test demo based on model of MPII dataset: testModel_mpi.ipynb
-3. Train demo: TrainWeight.py
-
+4. Train demo: TrainWeight.py
+5. Evaluation on coco validation dataset : evaluation_coco.py
 
 ### Cite paper Realtime Multi-Person 2D Pose Estimation using Part Affinity Fields
 
@@ -36,3 +36,12 @@ original caffe training https://github.com/CMU-Perceptual-Computing-Lab/caffe_rt
 - [x] evaluation code
 - [ ] image read and augmentation in C++
 
+## Other implementations 
+
+Original caffe training model https://github.com/CMU-Perceptual-Computing-Lab/caffe_rtpose
+
+Original data preparation https://github.com/ZheC/Realtime_Multi-Person_Pose_Estimation
+
+pytorch https://github.com/tensorboy/pytorch_Realtime_Multi-Person_Pose_Estimation
+
+keras https://github.com/raymon-tian/keras_Realtime_Multi-Person_Pose_Estimation
