@@ -40,7 +40,7 @@ original caffe training https://github.com/CMU-Perceptual-Computing-Lab/caffe_rt
 
 Original caffe training model https://github.com/CMU-Perceptual-Computing-Lab/caffe_rtpose
 
-Original data preparation https://github.com/ZheC/Realtime_Multi-Person_Pose_Estimation
+Original data preparation and demo https://github.com/ZheC/Realtime_Multi-Person_Pose_Estimation
 
 pytorch https://github.com/tensorboy/pytorch_Realtime_Multi-Person_Pose_Estimation
 
