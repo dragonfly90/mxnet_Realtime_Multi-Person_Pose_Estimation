@@ -26,9 +26,12 @@ import skimage.io as io
 from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval
 
+from config.config import config
+
 from GenerateLabelCPM import *
 from modelCPM import *
 
+os.environ["MXNET_CUDNN_AUTOTUNE_DEFAULT"] = "0"
 
 Point = namedtuple('Point', 'x y')
 crop_size_x = 368
@@ -109,7 +112,7 @@ def applyDNN(oriImg, images, sym1, arg_params1, aux_params1):
     # print testimage.shape
     # cmodel = mx.mod.Module(symbol=sym1, label_names=[])
     # cmodel = mx.mod.Module(symbol=sym1, label_names=[], context=mx.gpu(0))
-    cmodel = mx.mod.Module(symbol=sym1, context = mx.gpu(3), label_names=[])
+    cmodel = mx.mod.Module(symbol=sym1, context = mx.gpu(0), label_names=[])
     # cmodel = mx.mod.Module(symbol = sym1, label_names = []) 
     cmodel.bind(data_shapes=[('data', (1, 3, testimage.shape[1], testimage.shape[2]))])
     cmodel.init_params(arg_params=arg_params1, aux_params=aux_params1)
@@ -165,22 +168,33 @@ def applyModel(oriImg, param, sym, arg_params, aux_params):
         multiplier.append(pow(2, current_scale))
         current_scale = current_scale+(1.0/octave)
     '''
+    '''
     boxsize = 368
-    scale_search = 0.5, 1.0, 1.5, 2.0
+    scale_search = [0.5, 1.0, 1.5, 2.0, 2.5]
     multiplier = [x * boxsize / oriImg.shape[0] for x in scale_search]
+    '''
+    boxsize = 368
+    scale_search = [0.5, 1, 1.5, 2, 2.3]
+    
+    multiplier = [x * boxsize*1.0/ oriImg.shape[0] for x in scale_search 
+                  if x * boxsize*1.0/ oriImg.shape[0]*oriImg.shape[1]<1500]
+    print multiplier[-1]*oriImg.shape[1]
     # print multiplier
     
     heatmap_avg = np.zeros((oriImg.shape[0], oriImg.shape[1], 19))
     pag_avg = np.zeros((oriImg.shape[0], oriImg.shape[1], 38))
     for i in range(len(multiplier)):
         # print i
-        cscale = multiplier[i]
-        imageToTest = cv.resize(oriImg, (0,0), fx=cscale, fy=cscale, interpolation=cv.INTER_CUBIC)
-        heatmap, pagmap = applyDNN(oriImg, imageToTest, sym, arg_params, aux_params)
-        # print(heatmap.shape)
-        # print(pagmap.shape)
-        heatmap_avg = heatmap_avg + heatmap / len(multiplier)
-        pag_avg = pag_avg + pagmap / len(multiplier)
+        try:
+            cscale = multiplier[i]
+            imageToTest = cv.resize(oriImg, (0,0), fx=cscale, fy=cscale, interpolation=cv.INTER_CUBIC)
+            heatmap, pagmap = applyDNN(oriImg, imageToTest, sym, arg_params, aux_params)
+            # print(heatmap.shape)
+            # print(pagmap.shape)
+            heatmap_avg = heatmap_avg + heatmap / len(multiplier)
+            pag_avg = pag_avg + pagmap / len(multiplier)
+        except:
+            print cscale*oriImg.shape[0], cscale*oriImg.shape[1]
         # print 'add one layer'
     return heatmap_avg, pag_avg
 
@@ -360,8 +374,10 @@ def connect56LineVec(oriImg, param, sym, arg_params, aux_params):
     return candidate, subset
 
 # Load parameters
-output_prefix='../realtimePose'
-sym, arg_params, aux_params = mx.model.load_checkpoint(output_prefix, 0)
+output_prefix = config.TEST.model_path 
+sym, _, _ = mx.model.load_checkpoint('../realtimePose', 0)
+sym1, arg_params, aux_params = mx.model.load_checkpoint(output_prefix, config.TEST.epoch)
+
 
 # ground truth
 annFile = '/data/datasets/COCO/person_keypoints_trainval2014/person_keypoints_val2014.json'
@@ -416,7 +432,7 @@ starttime = time.time()
 orderCOCO = [1,0,7,9,11, 6,8,10,13,15,17,12,14,16,3,2,5,4]
 myjsonValidate = list(dict())
 count = 0
-imgIds_num = 2644
+imgIds_num = config.TEST.imgIds_num
 #imgIds_num = 100
 not_working_num = 0
 notworkingimageIds = []
@@ -482,9 +498,9 @@ prefix = 'person_keypoints' if annType=='keypoints' else 'instances'
 print 'Running demo for *%s* results.'%(annType)
 
 import json
-with open('evaluationResultFixed.json', 'w') as outfile:
+with open('evaluationResult.json', 'w') as outfile:
     json.dump(myjsonValidate, outfile)
-resJsonFile = 'evaluationResultFixed.json'
+resJsonFile = 'evaluationResult.json'
 cocoDt2 = cocoGt.loadRes(resJsonFile)
 
 image_ids = []
