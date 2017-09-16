@@ -14,19 +14,12 @@ import scipy
 import PIL.Image
 import math
 import time
+from PIL import Image, ImageDraw
 
+from config.config import config
 from collections import namedtuple
 Point = namedtuple('Point', 'x y')
 
-crop_size_x = 368
-crop_size_y = 368
-center_perterb_max = 40
-
-
-scale_prob = 1
-scale_min = 0.5
-scale_max = 1.1
-target_dist = 0.6
 
 def rotatePoint(R, pointDict):
     NewPoint = {'x':0, 'y':0}
@@ -47,12 +40,12 @@ def readmeta(data):
         # meta['joint_self']['isVisible'].append(joint_self[i][2])
         if joint_self[i][2] == 3:
             meta['joint_self']['isVisible'].append(3)
+        elif joint_self[i][2] == 2:
+            meta['joint_self']['isVisible'].append(2)
+        elif joint_self[i][2] == 0:
+            meta['joint_self']['isVisible'].append(0)
         else:
-            if joint_self[i][2] == 0:
-                meta['joint_self']['isVisible'].append(0)
-            else:
-                meta['joint_self']['isVisible'].append(1)
-
+            meta['joint_self']['isVisible'].append(1)
             if (meta['joint_self']['joints'][i]['x'] < 0 or meta['joint_self']['joints'][i]['y'] < 0
                 or meta['joint_self']['joints'][i]['x'] >= meta['img_size']['width'] or
                         meta['joint_self']['joints'][i]['y'] >= meta['img_size']['height']):
@@ -70,12 +63,12 @@ def readmeta(data):
             # meta['joint_self']['isVisible'].append(joint_self[i][2])
             if joint_other[i][2] == 3:
                 meta['joint_others'][key]['isVisible'].append(3)
+            elif joint_other[i][2] == 2:
+                meta['joint_others'][key]['isVisible'].append(2)
+            elif joint_other[i][2] == 0:
+                meta['joint_others'][key]['isVisible'].append(0)
             else:
-                if joint_other[i][2] == 0:
-                    meta['joint_others'][key]['isVisible'].append(0)
-                else:
-                    meta['joint_others'][key]['isVisible'].append(1)
-
+                meta['joint_others'][key]['isVisible'].append(1)
                 if (meta['joint_others'][key]['joints'][i]['x'] < 0 or meta['joint_others'][key]['joints'][i]['y'] < 0
                     or meta['joint_others'][key]['joints'][i]['x'] >= meta['img_size']['width'] or
                             meta['joint_others'][key]['joints'][i]['y'] >= meta['img_size']['height']):
@@ -90,6 +83,7 @@ def TransformJointsSelf(meta):
     COCO_to_ours_1 = [1, 6, 7, 9, 11, 6, 8, 10, 13, 15, 17, 12, 14, 16, 3, 2, 5, 4]
     COCO_to_ours_2 = [1, 7, 7, 9, 11, 6, 8, 10, 13, 15, 17, 12, 14, 16, 3, 2, 5, 4]
 
+   
     for i in range(18):
         currentdict = {'x': (jo['joints'][COCO_to_ours_1[i] - 1]['x'] + jo['joints'][COCO_to_ours_2[i] - 1]['x']) * 0.5,
                        'y': (jo['joints'][COCO_to_ours_1[i] - 1]['y'] + jo['joints'][COCO_to_ours_2[i] - 1]['y']) * 0.5}
@@ -103,6 +97,7 @@ def TransformJointsSelf(meta):
             isVisible = jo['isVisible'][COCO_to_ours_1[i] - 1] and jo['isVisible'][COCO_to_ours_2[i] - 1]
             newjo['isVisible'].append(isVisible)
 
+    
     meta['joint_self'] = newjo
 
 
@@ -114,20 +109,22 @@ def TransformJointsOther(meta):
         COCO_to_ours_1 = [1, 6, 7, 9, 11, 6, 8, 10, 13, 15, 17, 12, 14, 16, 3, 2, 5, 4]
         COCO_to_ours_2 = [1, 7, 7, 9, 11, 6, 8, 10, 13, 15, 17, 12, 14, 16, 3, 2, 5, 4]
 
+        
         for i in range(18):
             currentdict = {
                 'x': (jo['joints'][COCO_to_ours_1[i] - 1]['x'] + jo['joints'][COCO_to_ours_2[i] - 1]['x']) * 0.5,
                 'y': (jo['joints'][COCO_to_ours_1[i] - 1]['y'] + jo['joints'][COCO_to_ours_2[i] - 1]['y']) * 0.5}
             newjo['joints'].append(currentdict)
 
-            if (jo['isVisible'][COCO_to_ours_1[i] - 1] == 2 or jo['isVisible'][COCO_to_ours_2[i] - 1] == 2):
+            if ((jo['isVisible'][COCO_to_ours_1[i] - 1] == 2) or (jo['isVisible'][COCO_to_ours_2[i] - 1] == 2)):
                 newjo['isVisible'].append(2)
-            elif (jo['isVisible'][COCO_to_ours_1[i] - 1] == 3 or jo['isVisible'][COCO_to_ours_2[i] - 1] == 3):
+            elif ((jo['isVisible'][COCO_to_ours_1[i] - 1] == 3) or (jo['isVisible'][COCO_to_ours_2[i] - 1] == 3)):
                 newjo['isVisible'].append(3)
             else:
                 isVisible = jo['isVisible'][COCO_to_ours_1[i] - 1] and jo['isVisible'][COCO_to_ours_2[i] - 1]
                 newjo['isVisible'].append(isVisible)
 
+        
         meta['joint_others'][key] = newjo
 
 
@@ -135,18 +132,22 @@ def TransformMetaJoints(meta):
     TransformJointsSelf(meta)
     TransformJointsOther(meta)
 
-def augmentation_scale(meta, oriImg):
+def augmentation_scale(meta, oriImg, maskmiss):
     newmeta = copy.deepcopy(meta)
     dice2 = np.random.uniform()
-    scale_multiplier = (scale_max - scale_min) * dice2 + scale_min
-    if newmeta['scale_provided']>0:
-        scale_abs = target_dist / newmeta['scale_provided']
+    scale_multiplier = (config.TRAIN.scale_max - config.TRAIN.scale_min) * dice2 + config.TRAIN.scale_min
+    if newmeta['scale_provided'] > 0:
+        scale_abs = config.TRAIN.target_dist / newmeta['scale_provided']
         scale = scale_abs * scale_multiplier
     else:
         scale = 1
+    
+    if config.TRAIN.scale_set == False:
+        scale = 1
 
     resizeImage = cv.resize(oriImg, (0, 0), fx=scale, fy=scale)
-
+    maskmiss_scale = cv.resize(maskmiss, (0,0), fx=scale, fy=scale)
+    
     newmeta['objpos'][0] *= scale
     newmeta['objpos'][1] *= scale
 
@@ -159,7 +160,7 @@ def augmentation_scale(meta, oriImg):
             newmeta['joint_others'][i]['joints'][j]['x'] *= scale
             newmeta['joint_others'][i]['joints'][j]['y'] *= scale
 
-    return (newmeta, resizeImage)
+    return (newmeta, resizeImage, maskmiss_scale)
 
 
 def onPlane(p, img_size):
@@ -169,11 +170,12 @@ def onPlane(p, img_size):
         return False
     return True
 
-def augmentation_flip(meta, croppedImage):
+def augmentation_flip(meta, croppedImage, maskmiss):
     dice = np.random.uniform()
     newmeta = copy.deepcopy(meta)
-    if dice > 0.5: 
+    if config.TRAIN.flip and dice > 0.5: 
         flipImage = cv.flip(croppedImage, 1)
+        maskmiss_flip = cv.flip(maskmiss, 1)
 
         newmeta['objpos'][0] =  newmeta['img_width'] - 1- newmeta['objpos'][0]
 
@@ -185,15 +187,16 @@ def augmentation_flip(meta, croppedImage):
                 newmeta['joint_others'][i]['joints'][j]['x'] = newmeta['img_width'] - 1 - newmeta['joint_others'][i]['joints'][j]['x']
     else:
         flipImage = croppedImage.copy()
+        maskmiss_flip = maskmiss.copy()
         
-    return (newmeta, flipImage)
+    return (newmeta, flipImage, maskmiss_flip)
 
-def augmentation_rotate(meta, flipimage):
+def augmentation_rotate(meta, flipimage, maskmiss):
     newmeta = copy.deepcopy(meta)
+    #print maskmiss.dtype
     
-    max_rotate_degree = 40
     dice2 = np.random.uniform()
-    degree = (dice2 - 0.5)*2*max_rotate_degree
+    degree = (dice2 - 0.5)*2*config.TRAIN.max_rotate_degree 
     
     #print degree
     center = (368/2, 368/2)
@@ -201,6 +204,7 @@ def augmentation_rotate(meta, flipimage):
     R = cv.getRotationMatrix2D(center, degree, 1.0)
     
     rotatedImage = cv.warpAffine(flipimage, R, (368,368))
+    maskmiss_rotated = cv.warpAffine(maskmiss, R, (368,368))
     
     for i in range(len(meta['joint_self']['joints'])):
         newmeta['joint_self']['joints'][i] = rotatePoint(R, newmeta['joint_self']['joints'][i])
@@ -209,18 +213,20 @@ def augmentation_rotate(meta, flipimage):
         for j in range(len(meta['joint_others'][i]['joints'])):
             newmeta['joint_others'][i]['joints'][j] = rotatePoint(R, newmeta['joint_others'][i]['joints'][j])
     
-    return (newmeta, rotatedImage)
+    return (newmeta, rotatedImage, maskmiss_rotated)
 
-def augmentation_croppad(meta, oriImg):
-    dice_x = np.random.uniform()
-    dice_y = np.random.uniform()
+def augmentation_crop(meta, oriImg, maskmiss):
+    # dice_x = np.random.uniform()
+    # dice_y = np.random.uniform()
+    dice_x = 0.5
+    dice_y = 0.5
     # float dice_x = static_cast <float> (rand()) / static_cast <float> (RAND_MAX); //[0,1]
     # float dice_y = static_cast <float> (rand()) / static_cast <float> (RAND_MAX); //[0,1]
-    crop_x = crop_size_x
-    crop_y = crop_size_y
+    crop_x = config.TRAIN.crop_size_x
+    crop_y = config.TRAIN.crop_size_y
 
-    x_offset = int((dice_x - 0.5) * 2 * center_perterb_max)
-    y_offset = int((dice_y - 0.5) * 2 * center_perterb_max)
+    x_offset = int((dice_x - 0.5) * 2 * config.TRAIN.center_perterb_max)
+    y_offset = int((dice_y - 0.5) * 2 * config.TRAIN.center_perterb_max)
 
     #print x_offset, y_offset
     newmeta2 = copy.deepcopy(meta)
@@ -231,7 +237,7 @@ def augmentation_croppad(meta, oriImg):
     offset_up = -int(center[1] - crop_y / 2)
 
     img_dst = np.full((crop_y, crop_x, 3), 128, dtype=np.uint8)
-
+    maskmiss_croppad = np.full((crop_y, crop_x, 3), False, dtype=np.uint8)
     for i in range(crop_y):
         for j in range(crop_x):
             coord_x_on_img = int(center[0] - crop_x / 2 + j)
@@ -239,7 +245,8 @@ def augmentation_croppad(meta, oriImg):
             # print coord_x_on_img, coord_y_on_img
             if (onPlane([coord_x_on_img, coord_y_on_img], [oriImg.shape[1], oriImg.shape[0]])):
                 img_dst[i, j, :] = oriImg[coord_y_on_img, coord_x_on_img, :]
-
+                maskmiss_croppad[i, j] = maskmiss[coord_y_on_img, coord_x_on_img]
+                
     newmeta2['objpos'][0] += offset_left
     newmeta2['objpos'][1] += offset_up
 
@@ -252,7 +259,7 @@ def augmentation_croppad(meta, oriImg):
             newmeta2['joint_others'][i]['joints'][j]['x'] += offset_left
             newmeta2['joint_others'][i]['joints'][j]['y'] += offset_up
 
-    return (newmeta2, img_dst)
+    return (newmeta2, img_dst, maskmiss_croppad)
 
 
 def putGaussianMaps(entry, rows, cols, center,
@@ -357,8 +364,12 @@ def generateLabelMap(img_aug, meta):
                     maximum = heat_map[i][g_y, g_x]
             heat_map[18][g_y,g_x]=max(1.0-maximum,0.0)
                           
-    mid_1 = [2, 9, 10, 2, 12, 13, 2, 3, 4, 3, 2, 6, 7, 6, 2, 1, 1, 15, 16]
-    mid_2 = [9, 10, 11, 12, 13, 14, 3, 4, 5, 17, 6, 7, 8, 18, 1, 15, 16, 17, 18]
+    # mid_1 = [2, 9, 10, 2, 12, 13, 2, 3, 4, 3, 2, 6, 7, 6, 2, 1, 1, 15, 16]
+    # mid_2 = [9, 10, 11, 12, 13, 14, 3, 4, 5, 17, 6, 7, 8, 18, 1, 15, 16, 17, 18]
+    
+    mid_1 = [2, 2, 3, 4, 6, 7, 2, 9, 10, 2, 12, 13, 2, 1, 15, 1, 16, 3, 6]
+    mid_2 = [3, 6, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 1, 15, 17, 16, 18, 17, 18]
+    
     thre = 1
 
     pag_map = list()
@@ -385,45 +396,50 @@ def generateLabelMap(img_aug, meta):
 
     return (heat_map, pag_map)
 
-def getMask(imageIndex):
-    img = coco.loadImgs(imgIds[imageIndex])[0]
-    annIds = coco.getAnnIds(imgIds=img['id'], catIds=catIds, iscrowd=None)
-    anns = coco.loadAnns(annIds)
-    
-    nx, ny = img['width'], img['height']
+def getMask(meta):
+    nx, ny = meta['img_width'], meta['img_height']
     maskall = np.zeros((ny, nx))
 
-    print(len(anns))
-    for i in range(len(anns)):    
-        seg = anns[i]['segmentation']
-        if anns[i]['num_keypoints']==0:
-            nlen = len(seg[0])
-            poly = zip(seg[0][0:nlen+2:2], seg[0][1:nlen+1:2])
-            img = Image.new("L", [nx, ny], 0)
-            ImageDraw.Draw(img).polygon(poly, outline=1, fill=1)
-            mask = np.array(img)
-            maskall = np.logical_or(mask, maskall)
+    try: 
+        if(len(meta['segmentations']) > 0):
+            for i in range(len(meta['segmentations'])): 
+                seg = meta['segmentations'][i]
+                if len(seg) > 0:
+                    nlen = len(seg[0])
+                    if nlen > 5:
+                        poly = zip(seg[0][0:nlen+2:2], seg[0][1:nlen+1:2])
+                        img = Image.new("L", [nx, ny], 0)
+                        ImageDraw.Draw(img).polygon(poly, outline=1, fill=1)
+                        mask = np.array(img)
+                        maskall = np.logical_or(mask, maskall)
+    except:
+        print 'full mask'
     
-    return ~maskall
+    return np.logical_not(maskall)
 
 def getImageandLabel(iterjson):
 
     meta = readmeta(iterjson)
+    
     TransformMetaJoints(meta)
 
     oriImg = cv.imread(meta['img_paths'])
-
-    newmeta, resizeImage = augmentation_scale(meta, oriImg)
-
-    newmeta2, croppedImage = augmentation_croppad(newmeta, resizeImage)
+    maskmiss = getMask(meta)
+    maskmiss = maskmiss.astype(np.uint8)
     
-    newmeta3, rotatedImage = augmentation_rotate(newmeta2, croppedImage)
+    newmeta, resizeImage, maskmiss_scale = augmentation_scale(meta, oriImg, maskmiss)
+
+    newmeta2, croppedImage, maskmiss_cropped = augmentation_crop(newmeta, resizeImage,
+                                                                   maskmiss_scale)
     
-    newmeta4, flipImage = augmentation_flip(newmeta3, rotatedImage)
+    newmeta3, rotatedImage, maskmiss_rotate= augmentation_rotate(newmeta2, croppedImage, 
+                                                                maskmiss_cropped)
+    
+    newmeta4, flipImage, maskmiss_flip = augmentation_flip(newmeta3, rotatedImage, maskmiss_rotate)
 
     heatmap, pagmap = generateLabelMap(flipImage, newmeta4)
 
-    return (croppedImage, heatmap, pagmap)
+    return (flipImage, maskmiss_flip, heatmap, pagmap)
 
 '''
 
@@ -462,7 +478,7 @@ x = [i['x'] for i in newmeta['joint_self']['joints']]
 y = [i['y'] for i in newmeta['joint_self']['joints']]
 plt.plot(x, y, 'r.')
 
-newmeta2, croppedImage = augmentation_croppad(newmeta, resizeImage)
+newmeta2, croppedImage = augmentation_crop(newmeta, resizeImage)
 
 
 img_dst = np.full((368, 368, 3), 128)
