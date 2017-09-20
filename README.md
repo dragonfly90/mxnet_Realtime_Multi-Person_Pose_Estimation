@@ -9,7 +9,8 @@
 2. Test demo based on model of coco dataset: testModel.ipynb
 3. Test demo based on model of MPII dataset: testModel_mpi.ipynb
 4. Train demo: TrainWeight.py
-5. Evaluation on coco validation dataset : evaluation_coco.py
+5. Check if heat map, part affinity graph map, mask are generated correctly in training: test_generateLabel.ipynb
+6. Evaluation on coco validation dataset : evaluation_coco.py
 
 ### Cite paper Realtime Multi-Person 2D Pose Estimation using Part Affinity Fields
 
@@ -33,7 +34,8 @@ original caffe training https://github.com/CMU-Perceptual-Computing-Lab/caffe_rt
 - [x] Add weight vector
 - [x] Train all images
 - [x] Train from vgg model
-- [x] evaluation code
+- [x] Evaluation code
+- [x] Generate heat map and part affinity graph map in C++
 - [ ] image read and augmentation in C++
 
 ## Other implementations 
