@@ -367,7 +367,7 @@ class cocoIterweight:
 
 
             image, mask, heatmap, pagmap = getImageandLabel(self.data[self.keys[self.cur_batch]])
-            maskscale = mask[0:8:368, 0:8:368, 0]
+            maskscale = mask[0:368:8, 0:368:8, 0]
             
             heatweight = np.ones((19,46,46))
             vecweight = np.ones((38,46,46))
