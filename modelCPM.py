@@ -337,7 +337,7 @@ class cocoIterweightBatch:
         return self._provide_label
 
     def next(self):
-        if self.cur_batch < self._batch_size:
+        if self.cur_batch < self.num_batches:
             
             transposeImage_batch = []
             heatmap_batch = []

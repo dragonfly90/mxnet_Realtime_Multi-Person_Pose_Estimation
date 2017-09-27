@@ -16,8 +16,14 @@ import math
 import time
 from PIL import Image, ImageDraw
 
+#import caffe
+#from caffe.proto import caffe_pb2
 from config.config import config
 from collections import namedtuple
+
+from cython.heatmap import putGaussianMaps
+from cython.pafmap import putVecMaps
+
 Point = namedtuple('Point', 'x y')
 
 
@@ -261,69 +267,6 @@ def augmentation_crop(meta, oriImg, maskmiss):
 
     return (newmeta2, img_dst, maskmiss_croppad)
 
-
-def putGaussianMaps(entry, rows, cols, center,
-                    stride, grid_x, grid_y, sigma):
-    start = stride / 2.0 - 0.5
-    center = Point(int(center.x), int(center.y))
-
-    for g_y in range(grid_y):
-        for g_x in range(grid_x):
-            x = start + g_x * stride
-            y = start + g_y * stride
-            d2 = (x - center.x) * (x - center.x) + (y - center.y) * (y - center.y)
-            exponent = d2 / 2.0 / sigma / sigma
-            if (exponent > 4.6052):
-                continue
-            entry[g_y, g_x] += np.exp(-exponent)
-            if (entry[g_y, g_x] > 1):
-                entry[g_y, g_x] = 1
-    return entry
-
-
-def putVecMaps(entryX, entryY, count, center1, center2, stride, grid_x, grid_y, sigma, thre):
-    if (type(center1) != Point):
-        raise Exception
-    if (type(center2) != Point):
-        raise Exception
-    centerA = Point(0.125 * center1.x, 0.125 * center1.y)
-    centerB = Point(0.125 * center2.x, 0.125 * center2.y)
-    # print centerA, centerB
-    bc = Point(centerB.x - centerA.x, centerB.y - centerA.y)
-    # print grid_x, grid_y
-    min_x = max(int(round(min(centerA.x, centerB.x)) - thre), 0)
-    max_x = min(int(round(max(centerA.x, centerB.x))) + thre, grid_x)
-    min_y = max(int(round(min(centerA.y, centerB.y) - thre)), 0)
-    max_y = min(int(round(max(centerA.y, centerB.y) + thre)), grid_y)
-
-    # print('-------------')
-    # print(min_x, max_x)
-    # print(min_y, max_y)
-    norm_bc = np.sqrt(bc.x * bc.x + bc.y * bc.y)
-    if norm_bc == 0:
-        return 
-    #print '----norm_bc------'
-    #print norm_bc
-    
-    bc = Point(bc.x / norm_bc, bc.y / norm_bc)
-
-    for g_y in range(min_y, max_y):
-        for g_x in range(min_x, max_x):
-            ba = Point(g_x - centerA.x, g_y - centerA.y)
-            dist = abs(ba.x * bc.y - ba.y * bc.x)
-            # print dist
-            if (dist <= thre):
-                cnt = count[g_y, g_x]
-                if (cnt == 0):
-                    entryX[g_y, g_x] = bc.x
-                    entryY[g_y, g_x] = bc.y
-
-                else:
-                    entryX[g_y, g_x] = (entryX[g_y, g_x] * cnt + bc.x) / (cnt + 1)
-                    entryY[g_y, g_x] = (entryY[g_y, g_x] * cnt + bc.y) / (cnt + 1)
-                    count[g_y, g_x] = cnt + 1
-
-
 def generateLabelMap(img_aug, meta):
     thre = 1
     crop_size_width = 368
@@ -341,18 +284,17 @@ def generateLabelMap(img_aug, meta):
         heat_map.append(np.zeros((crop_size_width / stride, crop_size_height / stride)))
 
     for i in range(18):
-        center = Point(meta['joint_self']['joints'][i]['x'], meta['joint_self']['joints'][i]['y'])
-
         if (meta['joint_self']['isVisible'][i] <= 1):
-            putGaussianMaps(heat_map[i], 368, 368, center, stride,
-                            grid_x, grid_y, sigma)
+            putGaussianMaps(heat_map[i], 368, 368, 
+                            meta['joint_self']['joints'][i]['x'], meta['joint_self']['joints'][i]['y'],
+                            stride, grid_x, grid_y, sigma)
 
         for j in meta['joint_others']:
-            center = Point(meta['joint_others'][j]['joints'][i]['x'],
-                           meta['joint_others'][j]['joints'][i]['y'])
             if (meta['joint_others'][j]['isVisible'][i] <= 1):
-                putGaussianMaps(heat_map[i], 368, 368, center, stride,
-                                grid_x, grid_y, sigma)
+                putGaussianMaps(heat_map[i], 368, 368, 
+                                meta['joint_others'][j]['joints'][i]['x'], 
+                                meta['joint_others'][j]['joints'][i]['y'],
+                                stride, grid_x, grid_y, sigma)
 
     ### put background channel
     
@@ -367,10 +309,10 @@ def generateLabelMap(img_aug, meta):
     mid_1 = [2, 9, 10, 2, 12, 13, 2, 3, 4, 3, 2, 6, 7, 6, 2, 1, 1, 15, 16]
     mid_2 = [9, 10, 11, 12, 13, 14, 3, 4, 5, 17, 6, 7, 8, 18, 1, 15, 16, 17, 18]
     
-    # mid_1 = [2, 2, 3, 4, 6, 7, 2, 9, 10, 2, 12, 13, 2, 1, 15, 1, 16, 3, 6]
-    # mid_2 = [3, 6, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 1, 15, 17, 16, 18, 17, 18]
+    #mid_1 = [2, 2, 3, 4, 6, 7, 2, 9, 10, 2, 12, 13, 2, 1, 15, 1, 16, 3, 6]
+    #mid_2 = [3, 6, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 1, 15, 17, 16, 18, 17, 18]
     
-    thre = 2
+    thre = 1
 
     pag_map = list()
     for i in range(38):
@@ -381,18 +323,18 @@ def generateLabelMap(img_aug, meta):
         jo = meta['joint_self']
 
         if (jo['isVisible'][mid_1[i] - 1] <= 1 and jo['isVisible'][mid_2[i] - 1] <= 1):
-            center1 = Point(jo['joints'][mid_1[i] - 1]['x'], jo['joints'][mid_1[i] - 1]['y'])
-            center2 = Point(jo['joints'][mid_2[i] - 1]['x'], jo['joints'][mid_2[i] - 1]['y'])
-            putVecMaps(pag_map[2 * i], pag_map[2 * i + 1], count, center1,
-                       center2, stride, 46, 46, sigma, thre)
+            putVecMaps(pag_map[2 * i], pag_map[2 * i + 1], count,
+                       jo['joints'][mid_1[i] - 1]['x'], jo['joints'][mid_1[i] - 1]['y'], 
+                       jo['joints'][mid_2[i] - 1]['x'], jo['joints'][mid_2[i] - 1]['y'],
+                       stride, 46, 46, sigma, thre)
 
         for j in meta['joint_others']:
             jo = meta['joint_others'][j]
             if (jo['isVisible'][mid_1[i] - 1] <= 1 and jo['isVisible'][mid_2[i] - 1] <= 1):
-                center1 = Point(jo['joints'][mid_1[i] - 1]['x'], jo['joints'][mid_1[i] - 1]['y'])
-                center2 = Point(jo['joints'][mid_2[i] - 1]['x'], jo['joints'][mid_2[i] - 1]['y'])
-                putVecMaps(pag_map[2 * i], pag_map[2 * i + 1], count, center1,
-                           center2, stride, 46, 46, sigma, thre)
+                putVecMaps(pag_map[2 * i], pag_map[2 * i + 1], count,
+                           jo['joints'][mid_1[i] - 1]['x'], jo['joints'][mid_1[i] - 1]['y'],
+                           jo['joints'][mid_2[i] - 1]['x'], jo['joints'][mid_2[i] - 1]['y'],
+                           stride, 46, 46, sigma, thre)
 
     return (heat_map, pag_map)
 
@@ -440,3 +382,4 @@ def getImageandLabel(iterjson):
     heatmap, pagmap = generateLabelMap(flipImage, newmeta4)
 
     return (flipImage, maskmiss_flip, heatmap, pagmap)
+

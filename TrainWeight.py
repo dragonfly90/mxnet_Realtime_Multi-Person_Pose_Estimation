@@ -79,10 +79,6 @@ class poseModule(mx.mod.Module):
                 '''
                 
                 sumerror = sumerror + cls_loss
-                    
-               
-                if i > 20:
-                    break
                 
                 #sumerror=sumerror+(math.sqrt(sumloss/numpixel))    
                 if i%100==0:
