@@ -5,10 +5,12 @@
    https://drive.google.com/drive/folders/0BzffphMuhDDMV0RZVGhtQWlmS1U
 
    or check caffe_to_mxnet folder to download original caffe model and transfer it to mxnet model.
-
+   
+   install heatmap and pafmap cython:  cython/rebuild.sh
+   
 2. Test demo based on model of coco dataset: testModel.ipynb
 3. Test demo based on model of MPII dataset: testModel_mpi.ipynb
-4. Train demo: TrainWeight.py
+4. Train with batch_size: TrainWeight.py 
 5. Check if heat map, part affinity graph map, mask are generated correctly in training: test_generateLabel.ipynb
 6. Evaluation on coco validation dataset : evaluation_coco.py
 
