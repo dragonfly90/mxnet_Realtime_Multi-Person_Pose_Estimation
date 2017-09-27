@@ -27,6 +27,8 @@ def putVecMaps(np.ndarray[DTYPE_t, ndim = 2] entryX, np.ndarray[DTYPE_t, ndim = 
     cdef DTYPE_t norm_bc = np.sqrt(bc_x * bc_x + bc_y * bc_y)
     if norm_bc == 0:
         return 
+    bc_x = bc_x/norm_bc
+    bc_y = bc_y/norm_bc
     
     cdef DTYPE_t ba_x, ba_y
     cdef DTYPE_t dist
