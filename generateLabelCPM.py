@@ -6,7 +6,6 @@ import mxnet as mx
 import numpy as np
 import copy
 import re
-from google.protobuf import text_format
 import json
 import cv2 as cv
 
@@ -199,12 +198,10 @@ def augmentation_flip(meta, croppedImage, maskmiss):
 
 def augmentation_rotate(meta, flipimage, maskmiss):
     newmeta = copy.deepcopy(meta)
-    #print maskmiss.dtype
     
     dice2 = np.random.uniform()
     degree = (dice2 - 0.5)*2*config.TRAIN.max_rotate_degree 
     
-    #print degree
     center = (368/2, 368/2)
     
     R = cv.getRotationMatrix2D(center, degree, 1.0)
@@ -233,6 +230,7 @@ def augmentation_crop(meta, oriImg, maskmiss):
 
     x_offset = int((dice_x - 0.5) * 2 * config.TRAIN.center_perterb_max)
     y_offset = int((dice_y - 0.5) * 2 * config.TRAIN.center_perterb_max)
+    
 
     #print x_offset, y_offset
     newmeta2 = copy.deepcopy(meta)

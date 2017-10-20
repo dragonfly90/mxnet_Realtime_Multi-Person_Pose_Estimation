@@ -1,5 +1,3 @@
-import sys
-sys.path.append('../../practice_demo')
 from modelCPM import *
 from config.config import config
 
@@ -11,9 +9,9 @@ class poseModule(mx.mod.Module):
 
         self.bind(data_shapes=[('data', (batch_size, 3, 368, 368))], label_shapes=[
         ('heatmaplabel', (batch_size, 19, 46, 46)),
-        ('partaffinityglabel', (batch_size, 38,46,46)),
-        ('heatweight', (batch_size,19,46,46)),
-        ('vecweight', (batch_size,38,46,46))])
+        ('partaffinityglabel', (batch_size, 38, 46, 46)),
+        ('heatweight', (batch_size, 19, 46, 46)),
+        ('vecweight', (batch_size, 38, 46, 46))])
    
         self.init_params(arg_params = carg_params, aux_params={},
                          allow_missing=True)
@@ -48,6 +46,7 @@ class poseModule(mx.mod.Module):
                     numpixel +=lossiter.shape[0]
                     
                 '''
+                
                 lossiter = prediction[0].asnumpy()
                 cls_loss = np.sum(lossiter)/batch_size
                 print 'start paf: ', cls_loss
@@ -86,7 +85,9 @@ class poseModule(mx.mod.Module):
                 
                 cmodel.backward()   
                 self.update()           
-                    
+                
+                if i > 10:
+                    break
                 try:
                     next_data_batch = next(data_iter)
                     self.prepare(next_data_batch)
@@ -123,7 +124,7 @@ cocodata = cocoIterweightBatch('pose_io/data.json',
                              )
 
 sym = poseSymbol()
-cmodel = poseModule(symbol=sym, context=mx.gpu(1),
+cmodel = poseModule(symbol=sym, context=mx.gpu(0),
                     label_names=['heatmaplabel',
                                  'partaffinityglabel',
                                  'heatweight',

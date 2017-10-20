@@ -1,5 +1,4 @@
 import re
-from google.protobuf import text_format
 import mxnet as mx
 from generateLabelCPM import *
 

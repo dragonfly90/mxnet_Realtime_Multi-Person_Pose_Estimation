@@ -1,7 +1,3 @@
-## Include mxnet path: you should include your mxnet local path, if mxnet path is global, 
-## you don't need to include it.
-import sys
-sys.path.append('../../practice_demo')
 import os
 import copy
 import re
@@ -13,8 +9,6 @@ import mxnet as mx
 
 import numpy as np
 from numpy import ma
-
-from google.protobuf import text_format
 
 import cv2 as cv
 import scipy
@@ -28,7 +22,7 @@ from pycocotools.cocoeval import COCOeval
 
 from config.config import config
 
-from GenerateLabelCPM import *
+from generateLabelCPM import *
 from modelCPM import *
 
 os.environ["MXNET_CUDNN_AUTOTUNE_DEFAULT"] = "0"
