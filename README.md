@@ -40,8 +40,8 @@ original caffe training https://github.com/CMU-Perceptual-Computing-Lab/caffe_rt
 - [x] Generate heat map and part affinity graph map in C++
 - [ ] image read and augmentation in C++
 
-## Train result
-We tested the code using two K60 GPUS on COCO dataset, with batch size set to 10 and learning rate set to 0.00004. and using vgg pretrained model on <data.mxnet.io> to initialize our parameters. After 20 epochs, we tested our model on COCO validation dataset(only 50 images) and we got a score of 0.10.  
+## Training with vgg warm up
+We tested the code using two K60 GPUS on COCO dataset, with batch size set to 10 and learning rate set to 0.00004. and using vgg pretrained model on <data.mxnet.io> to initialize our parameters. After 20 epochs, we tested our model on COCO validation dataset(only 50 images) and we got only 0.048 as mean average precision (AP) over 10 OKS threshold, which is 0.577 reported in original implementation. Please reach me if you have some ideas about this issue.  
 
 ```bash
  Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets= 20 ] = 0.048
