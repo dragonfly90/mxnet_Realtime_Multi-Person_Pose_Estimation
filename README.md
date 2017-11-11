@@ -13,6 +13,7 @@
 4. Train with batch_size: TrainWeight.py 
 5. Check if heat map, part affinity graph map, mask are generated correctly in training: test_generateLabel.ipynb
 6. Evaluation on coco validation dataset with transfered mxnet model: evaluation_coco.py
+
 The result is as following, the mean average precision (AP) over 10 OKS threshold  on the first 2644 images in the val set is 0.550, which is 0.577 in original implementation.
 
 ```bash
