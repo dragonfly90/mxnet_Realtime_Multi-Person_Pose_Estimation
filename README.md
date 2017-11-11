@@ -40,6 +40,26 @@ original caffe training https://github.com/CMU-Perceptual-Computing-Lab/caffe_rt
 - [x] Generate heat map and part affinity graph map in C++
 - [ ] image read and augmentation in C++
 
+## Train result
+We tested the code using two K60 GPUS on COCO dataset, with batch size set to 10 and learning rate set to 0.00004. and using vgg pretrained model on <data.mxnet.io> to initialize our parameters. After 20 epochs, we tested our model on COCO validation dataset(only 50 images) and we got a score of 0.10.  
+
+```bash
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets= 20 ] = 0.048
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets= 20 ] = 0.183
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets= 20 ] = 0.019
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets= 20 ] = 0.078
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets= 20 ] = 0.035
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 20 ] = 0.066
+ Average Recall     (AR) @[ IoU=0.50      | area=   all | maxDets= 20 ] = 0.224
+ Average Recall     (AR) @[ IoU=0.75      | area=   all | maxDets= 20 ] = 0.022
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets= 20 ] = 0.075
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets= 20 ] = 0.054
+
+```
+
+The traning process is not so easy, I found this model even can't converge if all layers are initialized randomly, I guess one reason is that this model uses many convolution layers with a large kernel, whose big pad may introduce much noise, and another reason may be the fact that this model uses MSE as loss function, and maybe it's better to use sigmoid as the avtivation function of the last layer and use entropy loss function instead. 
+
+
 ## Other implementations 
 
 [Original caffe training model](https://github.com/CMU-Perceptual-Computing-Lab/caffe_rtpose)
