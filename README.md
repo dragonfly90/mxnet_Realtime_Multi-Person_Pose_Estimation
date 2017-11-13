@@ -59,7 +59,7 @@ original caffe training https://github.com/CMU-Perceptual-Computing-Lab/caffe_rt
 
 python TrainWeightOnVgg.py
 
-We tested the code using two K60 GPUS on COCO dataset, with batch size set to 10 and learning rate set to 0.00004. and using vgg pretrained model on <data.mxnet.io> to initialize our parameters. After 20 epochs, we tested our model on COCO validation dataset(only 50 images) and we got only 0.048 as mAP, very low compared to original implementation. Please reach us if you have some ideas about this issue.  
+We tested the code using two K80 GPUS on COCO dataset, with batch size set to 10 and learning rate set to 0.00004. and using vgg pretrained model on <data.mxnet.io> to initialize our parameters. After 20 epochs, we tested our model on COCO validation dataset(only 50 images) and we got only 0.048 as mAP, very low compared to original implementation. Please reach us if you have some ideas about this issue.  
 
 ```bash
  Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets= 20 ] = 0.048
