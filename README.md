@@ -10,7 +10,10 @@
    
 2. Test demo based on model of coco dataset: testModel.ipynb
 3. Test demo based on model of MPII dataset: testModel_mpi.ipynb
-4. Train with batch_size: TrainWeight.py 
+4. Train
+   Train with vgg model warm up: python TrainWeightOnVgg.py  
+   You can download mxnet model and parameters for vgg19 from [here](http://data.mxnet.io/models/imagenet/vgg/)
+   Train from CMU's converted model: python TrainWeight.py 
 5. Check if heat map, part affinity graph map, mask are generated correctly in training: test_generateLabel.ipynb
 6. Evaluation on coco validation dataset with transfered mxnet model: evaluation_coco.py
 
