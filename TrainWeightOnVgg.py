@@ -223,13 +223,13 @@ cocodata = cocoIterweightBatch('pose_io/data.json',
                              )
 
 sym = poseSymbol()
-cmodel = poseModule(symbol=sym, context=mx.cpu(),
+cmodel = poseModule(symbol=sym, context=mx.gpu(3),
                     label_names=['heatmaplabel',
                                  'partaffinityglabel',
                                  'heatweight',
                                  'vecweight'])
 ## Load parameters from vgg
-warmupModel = '/data/guest_users/liangdong/liangdong/practice_demo/mxnet_CPM/model/vgg19'
+warmupModel = '../mxnet_CPM/model/vgg19'
 testsym, arg_params, aux_params = mx.model.load_checkpoint(warmupModel, 0)
 newargs = {}
 for ikey in config.TRAIN.vggparams:
@@ -237,7 +237,7 @@ for ikey in config.TRAIN.vggparams:
 
 prefix = 'vggpose'
 starttime = time.time()
-cmodel.fit(cocodata, num_epoch = 3, batch_size = batch_size, prefix = prefix, carg_params = newargs)
+cmodel.fit(cocodata, num_epoch = 1, batch_size = batch_size, prefix = prefix, carg_params = newargs)
 cmodel.save_checkpoint(prefix, config.TRAIN.num_epoch)
 endtime = time.time()
 
