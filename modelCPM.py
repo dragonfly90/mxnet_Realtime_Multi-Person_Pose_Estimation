@@ -310,7 +310,7 @@ class cocoIterweightBatch:
         with open(datajson, 'r') as f:
             data = json.load(f)
 
-        self.num_batches = len(data)
+        self.num_batches = len(data)/self._batch_size*self._batch_size
 
         self.data = data
         
@@ -345,7 +345,7 @@ class cocoIterweightBatch:
             vecweight_batch = []
             
             for i in range(self._batch_size):
-                if self.cur_batch >= 45174:
+                if self.cur_batch >= self.num_batches:
                     break
                 image, mask, heatmap, pagmap = getImageandLabel(self.data[self.keys[self.cur_batch]])
                 maskscale = mask[0:368:8, 0:368:8, 0]
