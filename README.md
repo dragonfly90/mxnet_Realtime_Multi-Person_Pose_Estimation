@@ -68,8 +68,8 @@ original caffe training https://github.com/CMU-Perceptual-Computing-Lab/caffe_rt
 ```bash
 python TrainWeightOnVgg.py
 ```
-
-We tested the code using two K80 GPUS on COCO dataset, with batch size set to 10 and learning rate set to 0.00004. and using vgg pretrained model on <data.mxnet.io> to initialize our parameters. After 20 epochs, we tested our model on COCO validation dataset(only 50 images) and we got only 0.048 as mAP, very low compared to original implementation. Please reach us if you have some ideas about this issue.  
+(1) Before
+We tested the code using two K80 GPUS on COCO dataset, with batch size set to 10 and learning rate set to 0.00004. and using vgg pretrained vgg model to initialize our parameters. After 20 epochs, we tested our model on COCO validation dataset(only 50 images) and we got only 0.048 as mAP, very low compared to original implementation. Please reach us if you have some ideas about this issue.  
 
 ```bash
  Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets= 20 ] = 0.048
@@ -84,6 +84,24 @@ We tested the code using two K80 GPUS on COCO dataset, with batch size set to 10
  Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets= 20 ] = 0.054
 
 ```
+
+(2) Fix the iterator bug, no data augmentation
+
+We tested the code using one TITAN X (Pascal) on COCO dataset, with batch size set to 10 and learning rate set to 0.00004. and using pretrained vgg model to initialize our parameters. After 4 epochs, we tested our model on COCO validation dataset(only first 50 images) and we got only 0.115 as mAP. 
+```bash
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets= 20 ] = 0.115
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets= 20 ] = 0.350
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets= 20 ] = 0.030
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets= 20 ] = 0.168
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets= 20 ] = 0.091
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 20 ] = 0.141
+ Average Recall     (AR) @[ IoU=0.50      | area=   all | maxDets= 20 ] = 0.373
+ Average Recall     (AR) @[ IoU=0.75      | area=   all | maxDets= 20 ] = 0.067
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets= 20 ] = 0.164
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets= 20 ] = 0.117
+```
+
+
 
 The traning process is not so easy, I found this model even can't converge if all layers are initialized randomly, I guess one reason is that this model uses many convolution layers with a large kernel, whose big pad may introduce much noise, and another reason may be the fact that this model uses MSE as loss function, and maybe it's better to use sigmoid as the avtivation function of the last layer and use entropy loss function instead. 
 
