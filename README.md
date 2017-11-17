@@ -62,11 +62,12 @@ original caffe training https://github.com/CMU-Perceptual-Computing-Lab/caffe_rt
 - [x] Train from vgg model
 - [x] Evaluation code
 - [x] Generate heat map and part affinity graph map in C++
-- [ ] image read and augmentation in C++
+- [ ] Enhancement: feature pyramid backend in training, symbol and iterator in featurePyramidCPM.py
 
 ## Training with vgg warm up
-
+```bash
 python TrainWeightOnVgg.py
+```
 
 We tested the code using two K80 GPUS on COCO dataset, with batch size set to 10 and learning rate set to 0.00004. and using vgg pretrained model on <data.mxnet.io> to initialize our parameters. After 20 epochs, we tested our model on COCO validation dataset(only 50 images) and we got only 0.048 as mAP, very low compared to original implementation. Please reach us if you have some ideas about this issue.  
 
