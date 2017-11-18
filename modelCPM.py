@@ -335,6 +335,40 @@ class cocoIterweightBatch:
     def provide_label(self):
         return self._provide_label
 
+    
+    def __getitem__(self,index):
+        if index + self._batch_size >= self.num_batches:
+            raise IndexError
+        transposeImage_batch = []
+        heatmap_batch = []
+        pagmap_batch = []
+        heatweight_batch = []
+        vecweight_batch = []
+
+            
+        for i in range(self._batch_size):
+            image, mask, heatmap, pagmap = getImageandLabel(self.data[self.keys[index + i]])
+            maskscale = mask[0:368:8, 0:368:8, 0]
+           
+            heatweight = np.repeat(maskscale[np.newaxis, :, :], 19, axis=0)
+            vecweight  = np.repeat(maskscale[np.newaxis, :, :], 38, axis=0)
+            
+            transposeImage = np.transpose(np.float32(image), (2,0,1))/256 - 0.5
+
+            
+            transposeImage_batch.append(transposeImage)
+            heatmap_batch.append(heatmap)
+            pagmap_batch.append(pagmap)
+            heatweight_batch.append(heatweight)
+            vecweight_batch.append(vecweight)
+            
+        return DataBatch(
+            np.array(transposeImage_batch),
+            np.array(heatmap_batch),
+            np.array(pagmap_batch),
+            np.array(heatweight_batch),
+            np.array(vecweight_batch))
+
     def next(self):
         if self.cur_batch < self.num_batches:
             

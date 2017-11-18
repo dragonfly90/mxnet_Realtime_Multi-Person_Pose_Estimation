@@ -49,6 +49,7 @@ config.TRAIN.max_rotate_degree = 0
 config.TRAIN.scale_set = False
 
 config.TRAIN.head = 'vgg'
+config.TRAIN.augmentation = True
 
 config.TRAIN.vggparams = ['conv1_1_weight',
                           'conv1_1_bias',
