@@ -38,10 +38,13 @@ class PrefetchIter(object):
         try:
             while not stop_event.is_set(): 
                 try:
-#                     with lock:
-                    ind = int(index.value)
-                    logging.debug("fetching...{0}".format(ind))
+                    with lock:
+                        ind = int(index.value)
+                    logging.debug("fetching...{0}".format(ind))                        
                     da = data_iter[ind]
+                    with lock:
+                        ind += self.batch_size
+                        index.value = ind
                     while not stop_event.is_set():
                         try:
                             q.put(da,block = False)
@@ -50,11 +53,6 @@ class PrefetchIter(object):
                             time.sleep(0.1)
                             logging.debug("FULL_{0}".format(stop_event.is_set()))
                             pass
-                    with lock:
-                        ind = index.value
-
-                        ind += self.batch_size
-                        index.value = ind
                 except IndexError:
                     self.reach_end = True
                     return
