@@ -106,6 +106,7 @@ if __name__ == '__main__':
                                     (batch_size, 19, 46, 46), (batch_size, 38, 46, 46)],
                                    batch_size
                                  )
+    cocodata.cur_batch = start_epoch * batch_size
 #     val_iter = cocoIterweightBatch('pose_io/data.json',
 #                                    'data', (batch_size, 3, 368,368),
 #                                    ['heatmaplabel','partaffinityglabel','heatweight','vecweight'],
@@ -115,5 +116,5 @@ if __name__ == '__main__':
 #                                  )
 #     val_iter.reset()
 #     val_data_batch = iter(val_iter).__next__()
-    train(cmodel, PrefetchIter( cocodata), start_epoch, 9999, batch_size, save_prefix, 1,99,None)
+    train(cmodel, PrefetchIter( cocodata), start_epoch, 99999, batch_size, save_prefix, 1,99,None)
     

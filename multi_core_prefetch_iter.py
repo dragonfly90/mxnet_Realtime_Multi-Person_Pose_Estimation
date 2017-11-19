@@ -45,8 +45,8 @@ class PrefetchIter(object):
                             time.sleep(0.1)
 #                             logging.debug("FULL")
                             pass
-                        with self.index_lock:
-                            self.index += self.batch_size
+                with self.index_lock:
+                    self.index += self.batch_size
                 except IndexError:
                     self.reach_end = True
                     return
@@ -69,7 +69,7 @@ class PrefetchIter(object):
             '''
             Ensure all preocesses has ended.
             '''            
-            for p in self.self.processes_list:
+            for p in self.processes_list:
                 p.join()
         except AttributeError:
             pass
