@@ -242,7 +242,20 @@ def fpn_pose():
     
     group = mx.symbol.Group([heat_map_loss, part_affinity_loss])
     return group
-    
+
+if __name__ == "__main__":
+    ida = (368//2,368//2)
+    mx.visualization.plot_network(fpn_pose(),
+                                  
+#                                   shape = {
+#                                       'data':(1,3,ida[0],ida[1]),
+#                                       'heatmap_label16':(),
+#                                       'heatmap_label8':(),
+#                                       'heatmap_label4':(),
+#                                       'heat_weight':(),
+#                                       }
+                                  
+                                  ).view()    
        
 class DataBatch(object):
     def __init__(self, data, heatmaplabel, partaffinityglabel, heatweight, vecweight, pad=0):
