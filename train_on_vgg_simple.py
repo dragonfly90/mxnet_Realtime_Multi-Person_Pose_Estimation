@@ -89,14 +89,14 @@ def train(cmodel,train_data,begin_epoch,end_epoch,batch_size,save_prefix,single_
 
 if __name__ == '__main__':
     from multi_core_prefetch_iter import PrefetchIter
-    start_epoch = 9900
+    start_epoch = 0
     batch_size = 10
     number_classes = 36#A-Z,0-9
     save_prefix = "model/vggpose"
     cmodel = get_module(save_prefix,
                         batch_size = batch_size,
                         start_epoch=start_epoch,
-                        reinit=False)
+                        reinit=True)
     
 
     cocodata = cocoIterweightBatch('pose_io/data.json',
