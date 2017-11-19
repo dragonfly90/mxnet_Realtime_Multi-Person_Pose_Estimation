@@ -18,7 +18,7 @@ def get_module(prefix ,
                batch_size = 24, 
                start_epoch = 0,
                reinit = False,
-               gpus = [4,7]):
+               gpus = [2,3,4,5]):
     sym = poseSymbol()
     if reinit:        
         _,args_vgg,auxes_vgg = mx.model.load_checkpoint("/data1/yks/models/vgg19/vgg19" , epoch=0)

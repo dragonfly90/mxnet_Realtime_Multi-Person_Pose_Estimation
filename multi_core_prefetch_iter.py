@@ -17,7 +17,7 @@ class PrefetchIter(object):
     '''
 
 
-    def __init__(self, data_iter,num_processes = 8):
+    def __init__(self, data_iter,num_processes = 16):
         '''
         Constructor
         '''
@@ -31,7 +31,7 @@ class PrefetchIter(object):
         self.index_lock = multiprocessing.Lock()
         self.stop_event = multiprocessing.Event()
         self.reach_end = multiprocessing.Value('i',0)
-        self.queue = multiprocessing.Queue(num_processes * 2)        
+        self.queue = multiprocessing.Queue(num_processes * 4)        
         self.num_processes = num_processes      
         self.processes_list = []  
         self.reset()
@@ -47,13 +47,13 @@ class PrefetchIter(object):
                     logging.debug("fetching...{0}".format(ind))                        
                     da = data_iter[ind]
                     while not stop_event.is_set():
-                        logging.debug("FULL_{0}".format(stop_event.is_set()))
+                        #logging.debug("FULL_{0}".format(stop_event.is_set()))
                         try:
                             q.put(da,block = False)
                             break
                         except Queue.Full:
                             time.sleep(0.1)
-                            logging.debug("FULL_{0}".format(stop_event.is_set()))
+#                            logging.debug("FULL_{0}".format(stop_event.is_set()))
                             pass
                 except IndexError as e:
                     logging.exception(e)
@@ -69,7 +69,7 @@ class PrefetchIter(object):
             for p in self.processes_list:
                 if p.is_alive():
                     need_to_wait = True
-        if self.queue.empty() and not need_to_wait:
+        if self.reach_end.value and self.queue.empty() and not need_to_wait:
             raise StopIteration
         else:            
             da = self.queue.get()
