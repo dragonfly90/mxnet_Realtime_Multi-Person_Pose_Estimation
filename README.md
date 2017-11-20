@@ -100,8 +100,19 @@ We tested the code using one TITAN X (Pascal) on COCO dataset, with batch size s
  Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets= 20 ] = 0.164
  Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets= 20 ] = 0.117
 ```
-
-
+After 18 epochs, we tested our model on COCO validation dataset(only first 50 images) and we got only 0.115 as mAP. 
+```
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets= 20 ] = 0.226
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets= 20 ] = 0.434
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets= 20 ] = 0.201
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets= 20 ] = 0.254
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets= 20 ] = 0.226
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 20 ] = 0.250
+ Average Recall     (AR) @[ IoU=0.50      | area=   all | maxDets= 20 ] = 0.440
+ Average Recall     (AR) @[ IoU=0.75      | area=   all | maxDets= 20 ] = 0.239
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets= 20 ] = 0.252
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets= 20 ] = 0.261
+```
 
 The traning process is not so easy, I found this model even can't converge if all layers are initialized randomly, I guess one reason is that this model uses many convolution layers with a large kernel, whose big pad may introduce much noise, and another reason may be the fact that this model uses MSE as loss function, and maybe it's better to use sigmoid as the avtivation function of the last layer and use entropy loss function instead. 
 
