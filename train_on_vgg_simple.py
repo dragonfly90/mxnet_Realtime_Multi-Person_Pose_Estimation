@@ -57,23 +57,7 @@ def train(cmodel,train_data,begin_epoch,end_epoch,batch_size,save_prefix,single_
             if nbatch % 100 == 0:
                 cmodel.save_checkpoint(save_prefix, current_batch)
                 print ("save_checkpoint finished")
-            if nbatch % 10 != 0:
-                for _ in range(single_train_count):
-                    cmodel.forward(data_batch, is_train=True) 
-                    cmodel.backward()  
-                    cmodel.update()
             else:
-                cmodel.forward(data_batch, is_train=True)       # compute predictions  
-                prediction=cmodel.get_outputs()
-                print(current_batch,end_epoch)
-                for i in range(len(prediction)):
-                    loss = mx.nd.sum(prediction[i]).asnumpy()[0]
-                    print(loss,end = " ")
-                print("")
-                for _ in range(single_train_count):
-                    cmodel.forward(data_batch, is_train=True) 
-                    cmodel.backward()  
-                    cmodel.update()        
                 cmodel.forward(data_batch, is_train=True)       # compute predictions  
                 prediction=cmodel.get_outputs()
                 for i in range(len(prediction)):
