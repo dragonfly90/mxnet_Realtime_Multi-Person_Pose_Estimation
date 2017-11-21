@@ -100,7 +100,7 @@ We tested the code using one TITAN X (Pascal) on COCO dataset, with batch size s
  Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets= 20 ] = 0.164
  Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets= 20 ] = 0.117
 ```
-After 18 epochs, we tested our model on COCO validation dataset(only first 50 images) and we got only 0.115 as mAP. 
+After 18 epochs, we tested our model on COCO validation dataset(only first 50 images) and we got only 0.226 as mAP. 
 ```
  Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets= 20 ] = 0.226
  Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets= 20 ] = 0.434
@@ -113,8 +113,21 @@ After 18 epochs, we tested our model on COCO validation dataset(only first 50 im
  Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets= 20 ] = 0.252
  Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets= 20 ] = 0.261
 ```
+After 23 epochs, we tested our model on COCO validation dataset(only first 50 images) and we got only 0.231 as mAP. 
 
-After 36 epochs, we tested our model on COCO validation dataset(only first 50 images) and we got only 0.115 as mAP. 
+```
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets= 20 ] = 0.231
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets= 20 ] = 0.466
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets= 20 ] = 0.230
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets= 20 ] = 0.245
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets= 20 ] = 0.249
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 20 ] = 0.251
+ Average Recall     (AR) @[ IoU=0.50      | area=   all | maxDets= 20 ] = 0.470
+ Average Recall     (AR) @[ IoU=0.75      | area=   all | maxDets= 20 ] = 0.261
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets= 20 ] = 0.243
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets= 20 ] = 0.278
+```
+After 36 epochs, we tested our model on COCO validation dataset(only first 50 images) and we got only 0.229 as mAP. 
 ```
  Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets= 20 ] = 0.229
  Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets= 20 ] = 0.442
