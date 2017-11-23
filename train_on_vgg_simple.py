@@ -7,6 +7,7 @@ Created on Nov 18, 2017
 '''
 from __future__ import print_function
 from modelCPM import *
+import modelresnet
 from config.config import config
 from log import log_init
 import logging
@@ -19,13 +20,17 @@ def get_module(prefix ,
                start_epoch = 0,
                reinit = False,
                gpus = [2,3,4,5]):
-    sym = poseSymbol()
+    sym = modelresnet.CPMModel()
     if reinit:        
         _,args_vgg,auxes_vgg = mx.model.load_checkpoint("/data1/yks/models/vgg19/vgg19" , epoch=0)
+        _,args_resnet,auxes_resnt = mx.model.load_checkpoint("/data1/yks/models/resnet/resnet-152",0)
         args = {}
         auxes = {}
         for ikey in config.TRAIN.vggparams:
             args[ikey] = args_vgg[ikey]
+        for ikey in args_resnet.keys():
+            args[ikey] = args_resnet[ikey]
+            
     else:
         _,args,auxes = mx.model.load_checkpoint(prefix , epoch=start_epoch)        
     model = mx.mod.Module(symbol=sym, context=[mx.gpu(g) for g in gpus],
@@ -74,7 +79,7 @@ def train(cmodel,train_data,begin_epoch,end_epoch,batch_size,save_prefix,single_
 if __name__ == '__main__':
     from multi_core_prefetch_iter import PrefetchIter
     start_epoch = 0
-    batch_size = 10
+    batch_size = 4
     number_classes = 36#A-Z,0-9
     save_prefix = "model/vggpose"
     cmodel = get_module(save_prefix,

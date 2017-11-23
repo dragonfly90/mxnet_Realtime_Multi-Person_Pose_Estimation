@@ -356,8 +356,8 @@ def getImageandLabel(iterjson):
     newmeta, resizeImage, maskmiss_scale = augmentation_scale(meta, oriImg, maskmiss)
     newmeta2, croppedImage, maskmiss_cropped = augmentation_crop(newmeta, resizeImage, maskmiss_scale)
     newmeta3, rotatedImage, maskmiss_rotate= augmentation_rotate(newmeta2, croppedImage, maskmiss_cropped)
-    newmeta4, flipImage, maskmiss_flip = augmentation_flip(newmeta3, rotatedImage, maskmiss_rotate)
-    heatmap, pagmap = generateLabelMap(flipImage, newmeta4)
+#     newmeta4, flipImage, maskmiss_flip = augmentation_flip(newmeta3, rotatedImage, maskmiss_rotate)
+    heatmap, pagmap = generateLabelMap(rotatedImage, newmeta3)
 
-    return (flipImage, maskmiss_flip, heatmap, pagmap)
+    return (rotatedImage, maskmiss_rotate, heatmap, pagmap)
 
