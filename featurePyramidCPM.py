@@ -1,6 +1,9 @@
 from easydict import EasyDict as edict
 import mxnet as mx
-config = edict()
+import json
+from config.config import config
+from generateLabelCPM import *
+
 config.HEATMAP_FEAT_STRIDE = [16, 8, 4]
 
 eps = 2e-5
@@ -86,7 +89,7 @@ def get_resnet_conv_down(conv_feat):
     conv_fpn_feat = dict()
     conv_fpn_feat.update({"stride16":P4, "stride8":P3, "stride4":P2})
 
-    return conv_fpn_feat, [P4, P3, P2]
+    return conv_fpn_feat, [P2, P3, P4]
 
 def pafphead(backend, paf_level):
     if type(paf_level)!=str:
@@ -159,61 +162,42 @@ def fpn_pose():
     partaffinitylabel = dict()
     heatweight = dict()
     vecweight = dict()
-    
+    print 'stride'
+    print heatmap_feat_stride
+     
+    for s in [4, 8, 16]:
+        heatmaplabel['heatmap_label%s' %s] = mx.symbol.Variable(name='heatmap_label%s' %s)
+        partaffinitylabel['part_affinity_label%s' % s] = mx.symbol.Variable(name='part_affinity_label%s' %s)
+        heatweight['heat_weight%s' % s] = mx.symbol.Variable(name='heat_weight%s' %s)
+        vecweight['vec_weight%s' % s] = mx.symbol.Variable(name='vec_weight%s' %s)
+         
+    '''
     for s in heatmap_feat_stride:
         heatmaplabel['heatmap_label%s' % s] = mx.symbol.Variable(name='heatmap_label%s' % s)
         partaffinitylabel['part_affinity_label%s' % s] = mx.symbol.Variable(name='part_affinity_label%s' % s)
         heatweight['heat_weight%s' % s] = mx.symbol.Variable(name='heat_weight%s' % s)
         vecweight['vec_weight%s' % s] = mx.symbol.Variable(name='vec_weight%s' % s)
-    
+    '''
     # reshape input
-    for s in heatmap_feat_stride:
-        heatmaplabel['heatmap_label%s' % s]  = mx.symbol.Reshape(data = heatmaplabel['heatmap_label%s' % s],
-                                                                 shape = (-1, 19),
-                                                                 name = 'heatmap_label%s_reshape' %s)
+   
+    for s in [4, 8, 16]:
+        heatmaplabel['heatmap_label%s' % s]  = mx.symbol.Reshape(data = heatmaplabel['heatmap_label%s' %s],
+                                                                 shape = (-1,),
+                                                                 name = 'heatmap_label%s' %s)
         partaffinitylabel['part_affinity_label%s' % s] = mx.symbol.Reshape(data=partaffinitylabel['part_affinity_label%s' %s],
-                                                                           shape = (-1, 38),
-                                                                           name = 'part_affinity_label%s_reshape' %s)
-        heatweight['heat_weight%s' % s] = mx.symbol.Reshape(data=heatweight['heat_weight%s' % s],
-                                                            shape = (-1, 19),
-                                                            name = 'heat_weight%s_reshape' %s)
+                                                                           shape = (-1,),
+                                                                           name = 'part_affinity_label%s' %s)
+        heatweight['heat_weight%s' % s] = mx.symbol.Reshape(data=heatweight['heat_weight%s' %s],
+                                                            shape = (-1,),
+                                                            name = 'heat_weight%s' %s)
         vecweight['vec_weight%s' % s] = mx.symbol.Reshape(data=vecweight['vec_weight%s' %s],
-                                                          shape = (-1, 38),
-                                                          name = 'vec_weight%s_reshape'%s)
-        '''
-        rois['rois_stride%s' % s] = mx.symbol.Reshape(data=rois['rois_stride%s' % s],
-                                                      shape=(-1, 5),
-                                                      name='rois_stride%s_reshape' % s)
-        label['label_stride%s' % s] = mx.symbol.Reshape(data=label['label_stride%s' % s], shape=(-1,),
-                                                        name='label_stride%s_reshape'%s)
-        bbox_target['bbox_target_stride%s' % s] = mx.symbol.Reshape(data=bbox_target['bbox_target_stride%s' % s],
-                                                                    shape=(-1, 4 * num_classes),
-                                                                    name='bbox_target_stride%s_reshape'%s)
-        bbox_weight['bbox_weight_stride%s' % s] = mx.symbol.Reshape(data=bbox_weight['bbox_weight_stride%s' % s],
-                                                                    shape=(-1, 4 * num_classes),
-                                                                    name='bbox_weight_stride%s_reshape'%s)
-        mask_target['mask_target_stride%s' % s] = mx.symbol.Reshape(data=mask_target['mask_target_stride%s' % s],
-                                                                    shape=(-1, num_classes, 28, 28),
-                                                                    name='mask_target_stride%s_reshape'%s)
-        mask_weight['mask_weight_stride%s' % s] = mx.symbol.Reshape(data=mask_weight['mask_weight_stride%s' % s],
-                                                                    shape=(-1, num_classes, 1, 1),
-                                                                    name='mask_weight_stride%s_reshape'%s)
-       '''
-       
-    heatmaplabel_list = []
-    partaffinitylabel_list = []
-    heatweight_list = []
-    vecweight_list = []
-    for s in heatmap_feat_stride:       
-        heatmaplabel_list.append(heatmaplabel['heatmap_label%s' % s])
-        partaffinitylabel_list.append(partaffinitylabel['part_affinity_label%s' % s])
-        heatweight_list.append(heatweight['heat_weight%s' % s])
-        vecweight_list.append(vecweight['vec_weight%s' % s])
- 
-    heat_map = mx.symbol.concat(*heatmaplabel_list, dim=0)
-    part_affinitylabel = mx.symbol.concat(*partaffinitylabel_list, dim=0)
-    heat_weight = mx.symbol.concat(*heatweight_list, dim=0)
-    vec_weight = mx.symbol.concat(*vecweight_list, dim=0)
+                                                          shape = (-1,),
+                                                          name = 'vec_weight%s' %s)
+
+    #heat_map = mx.symbol.concat(*heatmaplabel_list, dim=0)
+    #part_affinitylabel = mx.symbol.concat(*partaffinitylabel_list, dim=0)
+    #heat_weight = mx.symbol.concat(*heatweight_list, dim=0)
+    #vec_weight = mx.symbol.concat(*vecweight_list, dim=0)
     
     resnet_backend = get_resnet_conv(data)
     resnet_backend_pool = get_resnet_conv_down(resnet_backend)
@@ -227,101 +211,44 @@ def fpn_pose():
         part_affinitylabel_predict_list.append(pafphead_level)
         heat_map_predict_list.append(heatmaphead_level)
       
-    print len(heat_map_predict_list)
-    print len(part_affinitylabel_predict_list)
+    #print len(heat_map_predict_list)
+    #print len(part_affinitylabel_predict_list)
+    '''
     heat_map_concat = mx.symbol.concat(*heat_map_predict_list, dim=0)  
     part_affinitylabel_concat = mx.symbol.concat(*part_affinitylabel_predict_list, dim=0)
+    '''
+    heatmap_label4r = mx.symbol.Reshape(data=heat_map_predict_list[0], shape=(-1,), name='heatmap_label4r')
+    heat_map_square4 = mx.symbol.square(heatmaplabel['heatmap_label4'] - heatmap_label4r)
+    heat_map_w4 = heat_map_square4*heatweight['heat_weight4']
+    heat_map_loss4  = mx.symbol.MakeLoss(heat_map_w4)
     
-    heat_map_square = mx.symbol.square(heat_map - heat_map_concat)
-    heat_map_w = heat_map_square*heat_weight
-    heat_map_loss  = mx.symbol.MakeLoss(heat_map_w)
+    part_affinity_label4r = mx.symbol.Reshape(data=part_affinitylabel_predict_list[0], shape=(-1,), name='part_affinity_label4r')
+    part_affinity_square4 = mx.symbol.square(partaffinitylabel['part_affinity_label4'] - part_affinity_label4r)
+    part_affinity_w4 = part_affinity_square4*vecweight['vec_weight4']
+    part_affinity_loss4  = mx.symbol.MakeLoss(part_affinity_w4)
     
-    part_affinity_square = mx.symbol.square(part_affinitylabel - part_affinitylabel_concat)
-    part_affinity_w = part_affinity_square*vec_weight
-    part_affinity_loss  = mx.symbol.MakeLoss(part_affinity_w)
+    heatmap_label8r = mx.symbol.Reshape(data=heat_map_predict_list[1], shape=(-1,), name='heatmap_label8r')
+    heat_map_square8 = mx.symbol.square(heatmaplabel['heatmap_label8'] - heatmap_label8r)
+    heat_map_w8 = heat_map_square8*heatweight['heat_weight8']
+    heat_map_loss8  = mx.symbol.MakeLoss(heat_map_w8)
     
-    group = mx.symbol.Group([heat_map_loss, part_affinity_loss])
+    part_affinity_label8r = mx.symbol.Reshape(data=part_affinitylabel_predict_list[1], shape=(-1,), name='part_affinity_label8r')
+    part_affinity_square8 = mx.symbol.square(partaffinitylabel['part_affinity_label8'] - part_affinity_label8r)
+    part_affinity_w8 = part_affinity_square8*vecweight['vec_weight8']
+    part_affinity_loss8  = mx.symbol.MakeLoss(part_affinity_w8)
+    
+    heatmap_label16r = mx.symbol.Reshape(data=heat_map_predict_list[2], shape=(-1,), name='heatmap_label16r')
+    heat_map_square16 = mx.symbol.square(heatmaplabel['heatmap_label16'] - heatmap_label16r)
+    heat_map_w16 = heat_map_square16*heatweight['heat_weight16']
+    heat_map_loss16  = mx.symbol.MakeLoss(heat_map_w16)
+    
+    part_affinity_label16r = mx.symbol.Reshape(data=part_affinitylabel_predict_list[2], shape=(-1,), name='part_affinity_label16r')
+    part_affinity_square16 = mx.symbol.square(partaffinitylabel['part_affinity_label16'] - part_affinity_label16r)
+    part_affinity_w16 = part_affinity_square16*vecweight['vec_weight16']
+    part_affinity_loss16  = mx.symbol.MakeLoss(part_affinity_w16)
+    
+    group = mx.symbol.Group([heat_map_loss4, part_affinity_loss4, heat_map_loss8, part_affinity_loss8,
+                            heat_map_loss16, part_affinity_loss16])
     return group
     
-       
-class DataBatch(object):
-    def __init__(self, data, heatmaplabel, partaffinityglabel, heatweight, vecweight, pad=0):
-        self.data = [data]
-        self.label = [heatmaplabel, partaffinityglabel, heatweight, vecweight]
-        self.pad = pad
-
-
-class cocoIterweightBatch:
-    def __init__(self, datajson,
-                 data_names, data_shapes, label_names,
-                 label_shapes, batch_size = 1):
-
-        self._data_shapes = data_shapes
-        self._label_shapes = label_shapes
-        self._provide_data = zip([data_names], [data_shapes])
-        self._provide_label = zip(label_names, label_shapes) * 6
-        self._batch_size = batch_size
-
-        with open(datajson, 'r') as f:
-            data = json.load(f)
-
-        self.num_batches = len(data)
-
-        self.data = data
-        
-        self.cur_batch = 0
-
-        self.keys = data.keys()
-
-    def __iter__(self):
-        return self
-
-    def reset(self):
-        self.cur_batch = 0
-
-    def __next__(self):
-        return self.next()
-
-    @property
-    def provide_data(self):
-        return self._provide_data
-
-    @property
-    def provide_label(self):
-        return self._provide_label
-
-    def next(self):
-        if self.cur_batch < self.num_batches:
-            
-            transposeImage_batch = []
-            heatmap_batch = []
-            pagmap_batch = []
-            heatweight_batch = []
-            vecweight_batch = []
-            
-            for i in range(self._batch_size):
-                if self.cur_batch >= 45174:
-                    break
-                image, mask, heatmap, pagmap = getImageandLabel(self.data[self.keys[self.cur_batch]])
-                maskscale = mask[0:368:8, 0:368:8, 0]
-               
-                heatweight = np.repeat(maskscale[np.newaxis, :, :], 19, axis=0)
-                vecweight  = np.repeat(maskscale[np.newaxis, :, :], 38, axis=0)
-                
-                transposeImage = np.transpose(np.float32(image), (2,0,1))/256 - 0.5
-                self.cur_batch += 1
-                
-                transposeImage_batch.append(transposeImage)
-                heatmap_batch.append(heatmap)
-                pagmap_batch.append(pagmap)
-                heatweight_batch.append(heatweight)
-                vecweight_batch.append(vecweight)
-                
-            return DataBatch(
-                mx.nd.array(transposeImage_batch),
-                mx.nd.array(heatmap_batch),
-                mx.nd.array(pagmap_batch),
-                mx.nd.array(heatweight_batch),
-                mx.nd.array(vecweight_batch))
-        else:
-            raise StopIteration  
+    
