@@ -141,7 +141,39 @@ After 36 epochs, we tested our model on COCO validation dataset(only first 50 im
  Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets= 20 ] = 0.302
 ```
 
+(3) batch size set to 10 and learning rate set to 0.00004, GTX 1080
+
+First level
+```
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets= 20 ] = 0.190
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets= 20 ] = 0.403
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets= 20 ] = 0.146
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets= 20 ] = 0.218
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets= 20 ] = 0.185
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 20 ] = 0.216
+ Average Recall     (AR) @[ IoU=0.50      | area=   all | maxDets= 20 ] = 0.418
+ Average Recall     (AR) @[ IoU=0.75      | area=   all | maxDets= 20 ] = 0.187
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets= 20 ] = 0.216
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets= 20 ] = 0.224
+```
+Six level
+```
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets= 20 ] = 0.258
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets= 20 ] = 0.478
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets= 20 ] = 0.251
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets= 20 ] = 0.280
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets= 20 ] = 0.268
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 20 ] = 0.284
+ Average Recall     (AR) @[ IoU=0.50      | area=   all | maxDets= 20 ] = 0.493
+ Average Recall     (AR) @[ IoU=0.75      | area=   all | maxDets= 20 ] = 0.291
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets= 20 ] = 0.280
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets= 20 ] = 0.307
+```
+
+
 The traning process is not so easy, I found this model even can't converge if all layers are initialized randomly, I guess one reason is that this model uses many convolution layers with a large kernel, whose big pad may introduce much noise, and another reason may be the fact that this model uses MSE as loss function, and maybe it's better to use sigmoid as the avtivation function of the last layer and use entropy loss function instead. 
+
+
 
 
 ## Other implementations 
