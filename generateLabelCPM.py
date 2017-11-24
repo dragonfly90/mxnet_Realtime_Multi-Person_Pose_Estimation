@@ -339,8 +339,8 @@ def getMask(meta):
                         mask = np.array(img)
                         maskall = np.logical_or(mask, maskall)
     except:
-        print 'full mask'
-    
+        # print 'full mask'
+        pass
     return np.logical_not(maskall)
 
 def getImageandLabel(iterjson):

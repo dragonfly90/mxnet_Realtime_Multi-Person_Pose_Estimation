@@ -359,7 +359,7 @@ def CPMModel_test(use_resnet = False):
     vecweight = mx.sym.Variable('vecweight')
     
     def _getResnet(_data):
-        sym_resnet = resnet.sym.get_resnet_openpose_sym()
+        sym_resnet = resnet.resnet.get_resnet_openpose_sym()
         r_re = sym_resnet(name = "resnet_152",data = _data)
         conv1_2 = mx.symbol.Convolution(name='resnet_152_conv1', 
                                         data=r_re , num_filter=128, 

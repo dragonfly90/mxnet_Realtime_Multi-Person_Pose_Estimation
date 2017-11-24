@@ -353,7 +353,7 @@ class cocoIterweightBatch:
             heatweight = np.repeat(maskscale[np.newaxis, :, :], 19, axis=0)
             vecweight  = np.repeat(maskscale[np.newaxis, :, :], 38, axis=0)
             
-            transposeImage = np.transpose(np.float32(image), (2,0,1))/256 - 0.5
+            transposeImage = np.transpose(np.float32(image), (2,0,1))
 
             
             transposeImage_batch.append(transposeImage)
@@ -382,6 +382,7 @@ class cocoIterweightBatch:
                 if self.cur_batch >= self.num_batches:
                     break
                 image, mask, heatmap, pagmap = getImageandLabel(self.data[self.keys[self.cur_batch]])
+                heatmap = (heatmap > .1).astype(np.float32)
                 maskscale = mask[0:368:8, 0:368:8, 0]
                
                 heatweight = np.repeat(maskscale[np.newaxis, :, :], 19, axis=0)
