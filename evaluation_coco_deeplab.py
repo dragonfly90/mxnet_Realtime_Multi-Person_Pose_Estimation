@@ -160,14 +160,16 @@ def applyModel(oriImg, param, sym, arg_params, aux_params):
     '''
     '''
     boxsize = 368
-    scale_search = [0.5, 1.0, 1.5, 2.0, 2.5]
+    scale_search = [1.0]
     multiplier = [x * boxsize / oriImg.shape[0] for x in scale_search]
     '''
     boxsize = 368
-    scale_search = [0.5, 1,1.5]
+    scale_search = [0.5,1,1.5]
     
     multiplier = [x * boxsize*1.0/ oriImg.shape[0] for x in scale_search 
                   if x * boxsize*1.0/ oriImg.shape[0]*oriImg.shape[1]<800]
+    multiplier += [x * boxsize*1.0/ oriImg.shape[1] for x in scale_search 
+                  if x * boxsize*1.0/ oriImg.shape[1]*oriImg.shape[1]<800]
     print multiplier
     print "shape"
     print multiplier[-1]*oriImg.shape[1]
@@ -289,7 +291,9 @@ def connect56LineVec(oriImg, param, sym, arg_params, aux_params):
                             # print('match')
                             # print(i, j, score_with_dist_prior, score_with_dist_prior+candA[i][2]+candB[j][2])
                             connection_candidate.append([i, j, score_with_dist_prior, score_with_dist_prior+candA[i][2]+candB[j][2]])
-                    except:
+                    except Exception as e:
+                        import logging
+                        logging.exception(e)
                         print 'error rendering'
                     # print('--------end-----------')
             connection_candidate = sorted(connection_candidate, key=lambda x: x[2], reverse=True)
@@ -383,8 +387,8 @@ from symbol.resnet_v1_101_deeplab import resnet_v1_101_deeplab
 Sym = resnet_v1_101_deeplab()
 sym = Sym.get_symbol(num_classes=14,is_train = False)
 
-sym1, arg_params, aux_params = mx.model.load_checkpoint('model/vggpose', 21500)
-cmodel = mx.mod.Module(symbol=sym, context = mx.gpu(7), label_names=[])
+sym1, arg_params, aux_params = mx.model.load_checkpoint('model/vggpose',1400)
+cmodel = mx.mod.Module(symbol=sym, context = mx.gpu(2), label_names=[])
 # cmodel = mx.mod.Module(symbol = sym1, label_names = []) 
 cmodel.bind(data_shapes=[('data', (1, 3, 368 * 2, 368 * 2))])
 cmodel.init_params(arg_params=arg_params, aux_params=aux_params,allow_extra=False,allow_missing=False)

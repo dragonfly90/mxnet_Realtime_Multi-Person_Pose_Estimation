@@ -21,7 +21,7 @@ def get_module(prefix ,
                batch_size = 24, 
                start_epoch = 0,
                reinit = False,
-               gpus = [2,3,4,5]):
+               gpus = [0,1,6,7]):
     Sym = resnet_v1_101_deeplab()
     sym = Sym.get_symbol(num_classes=14)
     if reinit:
@@ -44,7 +44,7 @@ def get_module(prefix ,
     return model
 def train(cmodel,train_data,begin_epoch,end_epoch,batch_size,save_prefix,single_train_count = 4,ndataset = 99,val_data_batch = None):
     cmodel.init_optimizer(optimizer='rmsprop',
-                        optimizer_params=(('learning_rate', 0.0001 ), )
+                        optimizer_params=(('learning_rate', 0.0001/8 ), )
                           )     
     for n_data_wheel in range(ndataset):  
         cmodel.save_checkpoint(save_prefix + "final", n_data_wheel)
@@ -59,7 +59,7 @@ def train(cmodel,train_data,begin_epoch,end_epoch,batch_size,save_prefix,single_
                 print("info: finish training.")
                 return
             if nbatch % 100 == 0:
-                cmodel.save_checkpoint(save_prefix, current_batch)
+                cmodel.save_checkpoint(save_prefix, nbatch)
                 print ("save_checkpoint finished")
             if nbatch % 1 == 0:
 
@@ -77,8 +77,8 @@ def train(cmodel,train_data,begin_epoch,end_epoch,batch_size,save_prefix,single_
 
 if __name__ == '__main__':
     from multi_core_prefetch_iter import PrefetchIter
-    start_epoch = 10300
-    batch_size = 4
+    start_epoch = 4800
+    batch_size = 16
 
     number_classes = 36#A-Z,0-9
     save_prefix = "model/vggpose"
