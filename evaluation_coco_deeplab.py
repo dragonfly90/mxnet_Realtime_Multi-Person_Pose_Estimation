@@ -387,8 +387,8 @@ from symbol.resnet_v1_101_deeplab import resnet_v1_101_deeplab
 Sym = resnet_v1_101_deeplab()
 sym = Sym.get_symbol(num_classes=14,is_train = False)
 
-sym1, arg_params, aux_params = mx.model.load_checkpoint('model/vggpose',1400)
-cmodel = mx.mod.Module(symbol=sym, context = mx.gpu(2), label_names=[])
+sym1, arg_params, aux_params = mx.model.load_checkpoint('model/vggpose',2500)
+cmodel = mx.mod.Module(symbol=sym, context = mx.gpu(3), label_names=[])
 # cmodel = mx.mod.Module(symbol = sym1, label_names = []) 
 cmodel.bind(data_shapes=[('data', (1, 3, 368 * 2, 368 * 2))])
 cmodel.init_params(arg_params=arg_params, aux_params=aux_params,allow_extra=False,allow_missing=False)

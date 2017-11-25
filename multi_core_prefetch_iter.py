@@ -67,7 +67,7 @@ class PrefetchIter(object):
                             q.put(da,block = False)
                             break
                         except Queue.Full:
-                            time.sleep(0.1)
+                            time.sleep(0.001)
 #                            logging.debug("FULL_{0}".format(stop_event.is_set()))
                             pass
                 except IndexError as e:
@@ -85,7 +85,7 @@ class PrefetchIter(object):
         if self.reach_end.value:
             self.stop_event.set()
             while self.processes_count.value !=0:
-                time.sleep(0.1)
+                time.sleep(0.01)
             '''
             join each process, to avoid dead process.
             '''
