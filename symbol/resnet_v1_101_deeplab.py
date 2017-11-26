@@ -809,7 +809,7 @@ class resnet_v1_101_deeplab(Symbol):
 
         pafmap_score = mx.symbol.slice_axis(score, axis=1, begin=numofparts, end=numofparts + numoflinks * 2)
 
-        return mx.symbol.Group([heatmap_score, pafmap_score])
+        return mx.symbol.Group([pafmap_score,heatmap_score])
 
     def get_symbol(self, num_classes, is_train=True):
         if is_train:

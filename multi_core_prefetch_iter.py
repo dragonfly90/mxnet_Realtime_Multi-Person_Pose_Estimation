@@ -20,7 +20,7 @@ class PrefetchIter(object):
     classdocs
     '''
 
-    def __init__(self, data_iter,num_processes = 32):
+    def __init__(self, data_iter,num_processes = 4):
         '''
         Constructor
         '''

@@ -44,7 +44,7 @@ def get_module(prefix ,
     return model
 def train(cmodel,train_data,begin_epoch,end_epoch,batch_size,save_prefix,single_train_count = 4,ndataset = 99,val_data_batch = None):
     cmodel.init_optimizer(optimizer='rmsprop',
-                        optimizer_params=(('learning_rate', 0.0001/8/10 ), )
+                        optimizer_params=(('learning_rate', 5e-7 ), )
                           )     
     for n_data_wheel in range(ndataset):  
         cmodel.save_checkpoint(save_prefix + "final", n_data_wheel)
@@ -77,7 +77,7 @@ def train(cmodel,train_data,begin_epoch,end_epoch,batch_size,save_prefix,single_
 
 if __name__ == '__main__':
     from multi_core_prefetch_iter import PrefetchIter
-    start_epoch = 3200
+    start_epoch = 4000
     batch_size = 16
 
     number_classes = 36#A-Z,0-9

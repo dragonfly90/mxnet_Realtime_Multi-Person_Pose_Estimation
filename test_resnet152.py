@@ -15,12 +15,13 @@ import numpy as np
 import cv2,os,math
 import matplotlib.pyplot as plt
 
+test_origin_openpose = False
 
 
-save_prefix = "models/resnet/wildpose"
+save_prefix = "/data1/yks/models/openpose/realtimePose" if test_origin_openpose else "model/vggpose"
 test_img_filename = "sample_image/multiperson.jpg"
 test_images_path = "/data1/yks/dataset/ai_challenger/ai_challenger_keypoint_validation_20170911/keypoint_validation_images_20170911/"
-epoch = 11600
+epoch = 0 if test_origin_openpose else 2300
 batch_size = 1
 from modelCPM import *
 import modelresnet
@@ -68,7 +69,7 @@ def getHeatAndPAF(cmodel,img_path):
     img = cv2.imread(img_path)
     img = cv2.resize(img,(368,368))
 #         img = padimg(img,368)
-    imgs_transpose = np.transpose(np.float32(img[:,:,:]), (2,0,1))
+    imgs_transpose = np.transpose(np.float32(img[:,:,:]), (2,0,1)) /256 - 0.5 if test_origin_openpose else np.transpose(np.float32(img[:,:,:]), (2,0,1))
     imgs_batch = mx.io.DataBatch([mx.nd.array([imgs_transpose[:,:,:]])])
     cmodel.forward(imgs_batch)
 
@@ -77,22 +78,25 @@ def getHeatAndPAF(cmodel,img_path):
     for r in result:
         print r.shape
        
-    heatmap = np.moveaxis(result[0].asnumpy()[0], 0, -1)
+    heatmap = np.moveaxis(result[1].asnumpy()[0], 0, -1)
     heatmap = cv2.resize(heatmap, (img.shape[1], img.shape[0]), interpolation=cv2.INTER_CUBIC)   
     
-    pafmap = np.moveaxis(result[1].asnumpy()[0], 0, -1)
+    pafmap = np.moveaxis(result[0].asnumpy()[0], 0, -1)
     pafmap = cv2.resize(pafmap, (img.shape[1], img.shape[0]), interpolation=cv2.INTER_CUBIC)    
     
         
     return img_path,img,heatmap,pafmap
-def get_module(prefix = "model/vggpose",
+def get_module(prefix = save_prefix,
                batch_size = 1, 
                start_epoch = epoch,
                reinit = False,
                gpus = [0]):
-    from symbol.resnet_v1_101_deeplab import resnet_v1_101_deeplab
-    Sym = resnet_v1_101_deeplab()
-    sym = Sym.get_symbol(num_classes=14,is_train  = False)
+    if test_origin_openpose:
+        sym = poseSymbol_test()
+    else:
+        from symbol.resnet_v1_101_deeplab import resnet_v1_101_deeplab
+        Sym = resnet_v1_101_deeplab()
+        sym = Sym.get_symbol(num_classes=14,is_train  = False)
     _,args,auxes = mx.model.load_checkpoint(prefix , epoch=start_epoch)
     model = mx.mod.Module(symbol=sym, context=[mx.gpu(g) for g in gpus],
                                   label_names=['heatmaplabel',

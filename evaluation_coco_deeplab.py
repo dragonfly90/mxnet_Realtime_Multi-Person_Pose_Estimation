@@ -114,12 +114,12 @@ def applyDNN(oriImg, images, sym1, arg_params1, aux_params1,cmodel):
     #print 'forward'
     result=cmodel.get_outputs()
 
-    heatmap = np.moveaxis(result[0].asnumpy()[0], 0, -1)
+    heatmap = np.moveaxis(result[1].asnumpy()[0], 0, -1)
     heatmap = cv.resize(heatmap, (0,0), fx=8, fy=8, interpolation=cv.INTER_CUBIC) # INTER_LINEAR
     heatmap = heatmap[:imageToTest_padded.shape[0]-pad[2], :imageToTest_padded.shape[1]-pad[3], :]
     heatmap = cv.resize(heatmap, (oriImg.shape[1], oriImg.shape[0]), interpolation=cv.INTER_CUBIC)
     
-    pagmap = np.moveaxis(result[1].asnumpy()[0], 0, -1)
+    pagmap = np.moveaxis(result[0].asnumpy()[0], 0, -1)
     pagmap = cv.resize(pagmap, (0,0), fx=8, fy=8, interpolation=cv.INTER_CUBIC)
     pagmap = pagmap[:imageToTest_padded.shape[0]-pad[2], :imageToTest_padded.shape[1]-pad[3], :]
     pagmap = cv.resize(pagmap, (oriImg.shape[1], oriImg.shape[0]), interpolation=cv.INTER_CUBIC)
@@ -387,7 +387,7 @@ from symbol.resnet_v1_101_deeplab import resnet_v1_101_deeplab
 Sym = resnet_v1_101_deeplab()
 sym = Sym.get_symbol(num_classes=14,is_train = False)
 
-sym1, arg_params, aux_params = mx.model.load_checkpoint('model/vggpose',2500)
+sym1, arg_params, aux_params = mx.model.load_checkpoint('model/vggpose',2300)
 cmodel = mx.mod.Module(symbol=sym, context = mx.gpu(3), label_names=[])
 # cmodel = mx.mod.Module(symbol = sym1, label_names = []) 
 cmodel.bind(data_shapes=[('data', (1, 3, 368 * 2, 368 * 2))])
