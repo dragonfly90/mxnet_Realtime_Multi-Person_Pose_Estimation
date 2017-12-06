@@ -52,6 +52,8 @@ config.TRAIN.augmentation = True
 
 config.TRAIN.head = 'vgg'
 
+config.TRAIN.augmentation = False
+
 config.TRAIN.vggparams = ['conv1_1_weight',
                           'conv1_1_bias',
                           'conv1_2_weight',
