@@ -339,16 +339,20 @@ def getMask(meta):
                         mask = np.array(img)
                         maskall = np.logical_or(mask, maskall)
     except:
-        print 'full mask'
+#         print 'full mask'
+        pass
     
     return np.logical_not(maskall)
 
-def getImageandLabel(iterjson):
+def getImageandLabel(iterjson,change_dir = False):
 
     meta = readmeta(iterjson)
     TransformMetaJoints(meta)
 
-    oriImg = cv.imread(meta['img_paths'])
+    img_path = meta['img_paths']
+    if change_dir:
+        img_path = str(img_path).replace("/data/guest_users/liangdong/liangdong/practice_demo/train2014/", "/home/kohill/hszc/data/coco/train2014/")
+    oriImg = cv.imread(img_path)
     maskmiss = getMask(meta)
     maskmiss = maskmiss.astype(np.uint8)
     
