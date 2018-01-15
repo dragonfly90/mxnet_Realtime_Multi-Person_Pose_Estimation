@@ -66,3 +66,10 @@ Then, we change learning rate to 0.00001
 
 Then, we change learning rate to 0.000001,and change optimizer to SGD
 
+
+### graph of losses
+
+<img src="imgs/heatmap_loss.png">
+<br>
+<img src="imgs/pafmap_loss.png">
+
