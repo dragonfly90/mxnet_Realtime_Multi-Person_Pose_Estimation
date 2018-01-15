@@ -1,5 +1,6 @@
 ### result on deeplab-resnet-101
 In the beginning, we set batch size to 8 and learning rate to 0.0001
+
 one epoch(only fist 50 images):
 
 ```
@@ -32,6 +33,8 @@ one epoch(only fist 50 images):
 
 Then, we change learning rate to 0.00001
 
+6 epochs(only fist 50 images):
+
 ```
  Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets= 20 ] = 0.308
  Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets= 20 ] = 0.562
@@ -44,3 +47,22 @@ Then, we change learning rate to 0.00001
  Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets= 20 ] = 0.292
  Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets= 20 ] = 0.424
 ```
+
+11 epochs(only fist 50 images):
+
+```
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets= 20 ] = 0.321
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets= 20 ] = 0.576
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets= 20 ] = 0.335
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets= 20 ] = 0.292
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets= 20 ] = 0.413
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 20 ] = 0.351
+ Average Recall     (AR) @[ IoU=0.50      | area=   all | maxDets= 20 ] = 0.597
+ Average Recall     (AR) @[ IoU=0.75      | area=   all | maxDets= 20 ] = 0.373
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets= 20 ] = 0.293
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets= 20 ] = 0.444
+ 
+```
+
+Then, we change learning rate to 0.000001,and change optimizer to SGD
+

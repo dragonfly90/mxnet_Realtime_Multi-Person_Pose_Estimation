@@ -9,6 +9,7 @@ from resnet_v1_101_deeplab import get_symbol
 import mxnet as mx
 import logging,os
 import numpy as np
+
 BATCH_SIZE = 8
 NUM_LINKS = 19
 NUM_PARTS =  19
@@ -47,8 +48,8 @@ def train(retrain = True,ndata = 16,gpus = [0,1],start_n_dataset = 0):
         args,auxes = load_checkpoint(SAVE_PREFIX+"final",start_n_dataset)
         
     model.init_params(arg_params=args, aux_params=auxes, allow_missing=retrain,allow_extra = True,initializer=mx.init.Uniform(0.0001))
-    model.init_optimizer(optimizer='rmsprop', 
-                        optimizer_params=(('learning_rate', 0.00001 ), ))   
+    model.init_optimizer(optimizer='SGD', 
+                        optimizer_params=(('learning_rate', 0.000001 ), ))   
     data_iter = getDataLoader(batch_size = BATCH_SIZE)
     global_step =np.load(GLOBAL_STEP_PATH) if not retrain and os.path.exists(GLOBAL_STEP_PATH) else 0
     for n_data_wheel in range(ndata):
@@ -72,4 +73,4 @@ def train(retrain = True,ndata = 16,gpus = [0,1],start_n_dataset = 0):
                 np.save(GLOBAL_STEP_PATH,global_step)
 if __name__ == "__main__":
     logging.basicConfig(level = logging.INFO)
-    train(retrain = False, gpus = [0,1],start_n_dataset = 6)
+    train(retrain = False, gpus = [0,1],start_n_dataset = 11)

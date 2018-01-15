@@ -374,7 +374,8 @@ def connect56LineVec(oriImg, param, sym, arg_params, aux_params):
 from resnet_v1_101_deeplab import get_symbol
 sym = get_symbol(is_train=False, numberofparts=19, numberoflinks=19)
 from train_deeplab import SAVE_PREFIX
-_, arg_params, aux_params = mx.model.load_checkpoint(SAVE_PREFIX + "final", config.TEST.epoch)
+import sys
+_, arg_params, aux_params = mx.model.load_checkpoint(SAVE_PREFIX + "final", int(sys.argv[1]))
 
 
 # ground truth
