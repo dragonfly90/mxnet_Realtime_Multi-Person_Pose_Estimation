@@ -16,3 +16,9 @@ pose_io/
 deeplab/logs/
 
 deeplab/pre/
+
+deeplab/evaluationResult\.json
+
+deeplab/plot\.gv
+
+deeplab/plot\.gv\.pdf

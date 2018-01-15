@@ -50,33 +50,39 @@ def collate_fn(batch):
     return [data,label]
 def getDataLoader(batch_size = 16):
     test_iter = DataIter("../pose_io/data_v1.json")
-    r = DataLoader(test_iter, batch_size=batch_size, shuffle=True, num_workers=4, collate_fn=collate_fn, pin_memory=False,drop_last = True)
+    r = DataLoader(test_iter, batch_size=batch_size, shuffle=True, num_workers=5, collate_fn=collate_fn, pin_memory=False,drop_last = True)
     return r
 if __name__ == "__main__":
-    for batch in getDataLoader():
-        print(batch.label[0].shape)
-#         for x in test_iter:
-#             x = list(map(lambda a: a.numpy(),x))
-#             x = list(map(lambda a: np.transpose(a,(1,2,0)),x))
-#             x[0] = x[0][:,:,(2,1,0)]
-#             x[0] = x[0].astype(np.uint8)
-#             fig, axes = plt.subplots(2, len(x)//2 + len(x)%2, figsize=(45, 45),
-#                                  subplot_kw={'xticks': [], 'yticks': []})
-#             fig.subplots_adjust(hspace=0.3, wspace=0.05) 
-#     
-#             count = 0
-#             for j in range(len(axes)):
-#                 for i in range(len(axes[0])):
-#                     try:
-#                         img = x[count]
-#                         count += 1
-#                     except IndexError:
-#                         break
-#                     print(count,len(x))
-#                     if len(img.shape)>=2 and img.shape[2] > 3:
-#                         axes[j][i].imshow(np.max(img,axis = 2)) 
-#                     else:
-#                         axes[j][i].imshow(img) 
-#                         
-#             plt.show()
+    for data_batch in getDataLoader():
+        data = data_batch[0]
+        label = data_batch[1]
+        for i in range(data.shape[0]):
+            img = data[i,:]
+            l = label[i,:]
+            print(l.shape)
+            x = [img,l[0:18],l[19:(19+19*2)],l[19*3:19*4],l[19*4:]]
+            for i in range(len(x)):
+                print(x[i].shape)
+                x[i] = np.transpose(x[i],(1,2,0))
+            x[0] = x[0][:,:,(2,1,0)]
+            x[0] = x[0].astype(np.uint8)
+            fig, axes = plt.subplots(2, len(x)//2 + len(x)%2, figsize=(45, 45),
+                                 subplot_kw={'xticks': [], 'yticks': []})
+            fig.subplots_adjust(hspace=0.3, wspace=0.05) 
+     
+            count = 0
+            for j in range(len(axes)):
+                for i in range(len(axes[0])):
+                    try:
+                        img = x[count]
+                        count += 1
+                    except IndexError:
+                        break
+                    print(count,len(x))
+                    if len(img.shape)>=2 and img.shape[2] > 3:
+                        axes[j][i].imshow(np.max(img,axis = 2)) 
+                    else:
+                        axes[j][i].imshow(img) 
+                         
+            plt.show()
     pass

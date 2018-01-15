@@ -859,8 +859,13 @@ def get_symbol(is_train = True,numberofparts = 19,numberoflinks = 19):
     heat_p,paf_p = Sym.get_body(data,numberofparts,numberoflinks)
     if is_train:
         loss1 = (heatmap * mx.symbol.log(heat_p + 1e-12) + (1-heatmap) * mx.symbol.log(1 - heat_p + 1e-12)) * heatweight
-        loss2 = (paf_p - partaffinity) ** 2 * vecweight
+        loss2 = ((paf_p - partaffinity) ** 2) * vecweight
         loss1 = mx.sym.sum(-1 * loss1)/(numberofparts * 46 * 46)
-        loss2 = mx.sym.sum(loss2/(numberoflinks * 46 * 46  * 2   ))
+        loss2 = mx.sym.sum(loss2/(numberoflinks * 46 * 46  * 2   ) ) 
         
-        return mx.symbol.Group([mx.symbol.MakeLoss(loss1),mx.symbol.MakeLoss(loss2)])
+        return mx.symbol.Group([mx.symbol.MakeLoss(loss1),mx.symbol.MakeLoss(loss2),mx.symbol.BlockGrad(heat_p),mx.symbol.BlockGrad(paf_p)])
+    else:
+        return mx.symbol.Group([heat_p,paf_p])
+if __name__ == "__main__":
+    mx.visualization.plot_network(get_symbol(is_train=True)).view()
+    
