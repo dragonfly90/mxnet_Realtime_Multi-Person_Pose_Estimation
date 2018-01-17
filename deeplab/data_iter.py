@@ -11,8 +11,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import json,cv2,logging 
 from generateLabelCPM import getImageandLabel
-numberofparts = 19
-numberoflinks = 19
+NUM_LINKS = 19
+NUM_PARTS =  19
+
 class DataIter(Dataset):
     def __init__(self, 
                  datajson):
@@ -24,8 +25,8 @@ class DataIter(Dataset):
     def __getitem__(self, index):
         image, mask, heatmap, pagmap = getImageandLabel(self.data[self.keys[index]],change_dir = True)
         maskscale = mask[0:368:8, 0:368:8, 0]
-        heatweight = np.repeat(maskscale[np.newaxis, :, :], 19, axis=0)
-        vecweight  = np.repeat(maskscale[np.newaxis, :, :], 38, axis=0)        
+        heatweight = np.repeat(maskscale[np.newaxis, :, :], NUM_PARTS, axis=0)
+        vecweight  = np.repeat(maskscale[np.newaxis, :, :], NUM_LINKS*2, axis=0)        
         transposeImage = np.transpose(np.float32(image), (2,0,1))
         return list(map(lambda x:torch.from_numpy(x.astype(np.float32)),
                         [np.array(transposeImage),
@@ -60,7 +61,7 @@ if __name__ == "__main__":
             img = data[i,:]
             l = label[i,:]
             print(l.shape)
-            x = [img,l[0:18],l[19:(19+19*2)],l[19*3:19*4],l[19*4:]]
+            x = [img,l[0:NUM_PARTS],l[19:(19+19*2)],l[19*3:19*4],l[19*4:]]
             for i in range(len(x)):
                 print(x[i].shape)
                 x[i] = np.transpose(x[i],(1,2,0))
@@ -78,10 +79,12 @@ if __name__ == "__main__":
                         count += 1
                     except IndexError:
                         break
-                    print(count,len(x))
-                    if len(img.shape)>=2 and img.shape[2] > 3:
-                        axes[j][i].imshow(np.max(img,axis = 2)) 
-                    else:
+                    if len(img.shape)>2 and img.shape[2] == 19 and count != 4:
+                        axes[j][i].imshow(img[:,:,18]) 
+                        print(count)
+                    elif  len(img.shape)>2 and img.shape[2] != 3:
+                        axes[j][i].imshow(np.max(img[:,:,:],axis = 2))                         
+                    else:        
                         axes[j][i].imshow(img) 
                          
             plt.show()
