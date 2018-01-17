@@ -12,7 +12,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 BATCH_SIZE = 1
 NUM_LINKS = 19
-NUM_PARTS =  19
+NUM_PARTS =  20
 SAVE_PREFIX = "models/resnet-101"
 EPOCH = 3100 
 PRETRAINED_PREFIX = "pre/deeplab_cityscapes"

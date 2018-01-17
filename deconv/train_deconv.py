@@ -9,9 +9,9 @@ from resnet_v1_101_deeplab_deconv import get_symbol
 import mxnet as mx
 import logging,os
 import numpy as np
-BATCH_SIZE = 8
-NUM_LINKS = 19
-NUM_PARTS =  20
+BATCH_SIZE = 6
+NUM_LINKS = 2432//2
+NUM_PARTS =  1152
 
 SAVE_PREFIX = "models/resnet-101"
 PRETRAINED_PREFIX = "pre/deeplab_cityscapes"

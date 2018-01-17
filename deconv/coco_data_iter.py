@@ -53,7 +53,7 @@ class DataIter(Dataset):
                         cv2.drawContours(img_human_seg,[poly[np.newaxis,:].astype(np.int32)],0,(1,1,1),-1)
                         polygons.append(Polygon(poly))
                         color.append(c)
-                    if 'keypoints' in ann and (ann['num_keypoints'] < 5 or ann['area']) < 32*32:
+                    if 'keypoints' in ann and (ann['num_keypoints'] < 5 or ann['area']< 32*32) :
                         for seg in ann['segmentation']:
                             poly = np.array(seg).reshape((int(len(seg)/2), 2))
                             cv2.drawContours(loss_mask,[poly[np.newaxis,:].astype(np.int32)],0,(0,0,0),-1)
@@ -120,20 +120,25 @@ class DataIter(Dataset):
         pafmaps = np.array(pafmaps)
         pafmaps[np.where(pafmaps_count!=0)] /= pafmaps_count[np.where(pafmaps_count!=0)]
         heatmaps = np.array(heatmaps)
-        heatmaps = np.concatenate([heatmaps,np.max(heatmaps,axis = 0)[np.newaxis,:,:],img_human_seg[np.newaxis,:,:]])
+#         heatmaps = np.concatenate([heatmaps,np.max(heatmaps,axis = 0)[np.newaxis,:,:],img_human_seg[np.newaxis,:,:]])
         loss_mask = loss_mask[np.newaxis,:,:]
         
         img_ori,heatmaps,pafmaps,loss_mask = self.im_transpose(img_ori, heatmaps, pafmaps, loss_mask, axes=(1,2,0))
         img_ori,heatmaps,pafmaps,loss_mask = self.im_resize(img_ori, heatmaps, pafmaps, loss_mask)
         img_ori,heatmaps,pafmaps,loss_mask = self.im_crop(img_ori, heatmaps, pafmaps, loss_mask)
-        heatmaps = cv2.resize(heatmaps,(46,46))
-        pafmaps = cv2.resize(pafmaps,(46,46))
-        loss_mask = cv2.resize(loss_mask,(46,46))
-        loss_mask = loss_mask[:,:,np.newaxis]
-        img_ori,heatmaps,pafmaps,loss_mask = self.im_transpose(img_ori, heatmaps, pafmaps, loss_mask, axes=(2,0,1))        
+#         heatmaps = cv2.resize(heatmaps,(46,46))
+#         pafmaps = cv2.resize(pafmaps,(46,46))
+#         loss_mask = cv2.resize(loss_mask,(46,46))
+#         loss_mask = loss_mask[:,:,np.newaxis]
+#         img_ori,heatmaps,pafmaps,loss_mask = self.im_transpose(img_ori, heatmaps, pafmaps, loss_mask, axes=(2,0,1))      
+        heatmaps = self.im_shrink(heatmaps)
+        pafmaps = self.im_shrink(pafmaps)
+        loss_mask = self.im_shrink(loss_mask)
+        loss_mask = np.min(loss_mask,axis = 0)[np.newaxis,:,:]
+        
+        img_ori = np.transpose(img_ori,axes = (2,0,1))
         heatmaps[np.where(heatmaps>=0.999)] = 0.999
         heatmaps[np.where(heatmaps<=0.001)] = 0.001
-
         return img_ori,heatmaps,pafmaps,loss_mask
     def im_transpose(self,img_ori,heatmaps,pafmaps,loss_mask,axes = (2,1,0)):
         img_ori,heatmaps,pafmaps,loss_mask = list(
@@ -157,10 +162,25 @@ class DataIter(Dataset):
         start_n = random.randint(0,img_ori.shape[1]-368)
         img_ori,heatmaps,pafmaps,loss_mask = list(
             map(lambda x:x[start_m:(start_m+368),start_n:(start_n+368)],
-                [img_ori,heatmaps,pafmaps,loss_mask]))
-
-        
+                [img_ori,heatmaps,pafmaps,loss_mask]))        
         return img_ori,heatmaps,pafmaps,loss_mask
+    def im_reshape(self,im):
+        assert im.shape[0] == 368 and im.shape[1] == 368
+        assert len(im.shape) == 2
+        shape_dest = (64,46,46)
+        r = np.zeros(shape = shape_dest,dtype = im.dtype)
+        for m in range(46):
+            for n in range(46):
+                stride = (8,8)
+                r[:,m,n] = im[m*stride[0]:(m+1)*stride[0],n*stride[1]:(n+1)*stride[1]].reshape((-1,))
+        return r
+    def im_shrink(self,im):
+        r = []
+        assert im.shape[0] == 368 and im.shape[1] == 368 
+        assert im.shape[2] >= 1 and len(im.shape) == 3
+        for i in range(im.shape[2]):
+            r.append(self.im_reshape(im[:,:,i]))
+        return np.concatenate(r,axis = 0)
 def collate_fn(batch):
     imgs_batch = []
     heatmaps_batch = []
@@ -185,6 +205,8 @@ if __name__ == '__main__':
     data_iter = DataIter()
     for i in range(len(data_iter)):
         da = data_iter[i]
+        for d in da:
+            print(d.shape)
         x = list(map(lambda x: np.transpose(x,(1,2,0)) if len(x.shape) > 2 else x, da))
         fig, axes = plt.subplots(2, len(x)//2 + len(x)%2, figsize=(45, 45),
                              subplot_kw={'xticks': [], 'yticks': []})
