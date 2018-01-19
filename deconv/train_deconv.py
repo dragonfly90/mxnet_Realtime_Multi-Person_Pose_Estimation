@@ -9,9 +9,9 @@ from resnet_v1_101_deeplab_deconv import get_symbol
 import mxnet as mx
 import logging,os
 import numpy as np
-BATCH_SIZE = 6
-NUM_LINKS = 2432//2
-NUM_PARTS =  1152
+BATCH_SIZE = 8
+NUM_LINKS = 608//2
+NUM_PARTS =  288
 
 SAVE_PREFIX = "models/resnet-101"
 PRETRAINED_PREFIX = "pre/deeplab_cityscapes"
@@ -64,8 +64,8 @@ def train(retrain = True,ndata = 16,gpus = [0,1],start_n_dataset = 0):
             paf_loss = prediction[1].asnumpy()[0] / BATCH_SIZE            
             summary_writer.add_scalar("heatmap_loss", heatmap_loss,global_step = nbatch)
             summary_writer.add_scalar("paf_loss", paf_loss,global_step=nbatch) 
-            logging.info("{0} {1} {2} {3} {4}".format(
-                n_data_wheel + start_n_dataset,nbatch, heatmap_loss,paf_loss,prediction[2].asnumpy()[0]))
+            logging.info("{0} {1} {2} {3}".format(
+                n_data_wheel + start_n_dataset,nbatch, heatmap_loss,paf_loss))
             model.backward()  
             model.update()        
             if nbatch % 100 == 0:

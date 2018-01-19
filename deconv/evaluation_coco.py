@@ -24,6 +24,7 @@ from config.config import config
 
 from generateLabelCPM import *
 from modelCPM import *
+import logging
 
 os.environ["MXNET_CUDNN_AUTOTUNE_DEFAULT"] = "0"
 
@@ -116,14 +117,23 @@ def applyDNN(oriImg, images, sym1, arg_params1, aux_params1):
     cmodel.forward(onedata)
     #print 'forward'
     result=cmodel.get_outputs()
+    from coco_data_iter import DataIter
     
-    heatmap = np.moveaxis(result[0].asnumpy()[0][0:-1,:,:], 0, -1)
-    heatmap = cv.resize(heatmap, (0,0), fx=8, fy=8, interpolation=cv.INTER_CUBIC) # INTER_LINEAR
+#     heatmap = np.moveaxis(result[0].asnumpy()[0][0:-1,:,:], 0, -1)
+#     heatmap = cv.resize(heatmap, (0,0), fx=8, fy=8, interpolation=cv.INTER_CUBIC) # INTER_LINEAR
+    heatmap = DataIter.im_expand(result[0].asnumpy()[0])
+
     heatmap = heatmap[:imageToTest_padded.shape[0]-pad[2], :imageToTest_padded.shape[1]-pad[3], :]
     heatmap = cv.resize(heatmap, (oriImg.shape[1], oriImg.shape[0]), interpolation=cv.INTER_CUBIC)
     
-    pagmap = np.moveaxis(result[1].asnumpy()[0], 0, -1)
-    pagmap = cv.resize(pagmap, (0,0), fx=8, fy=8, interpolation=cv.INTER_CUBIC)
+#     import matplotlib.pyplot as plt
+#     plt.imshow(np.max(heatmap,axis = 2))
+#     plt.show()
+    heatmap = np.concatenate([heatmap,np.max(heatmap,axis = 2)[:,:,np.newaxis]],axis = 2)
+    pagmap = DataIter.im_expand(result[1].asnumpy()[0])
+
+#     pagmap = np.moveaxis(result[1].asnumpy()[0], 0, -1)
+#     pagmap = cv.resize(pagmap, (0,0), fx=8, fy=8, interpolation=cv.INTER_CUBIC)
     pagmap = pagmap[:imageToTest_padded.shape[0]-pad[2], :imageToTest_padded.shape[1]-pad[3], :]
     pagmap = cv.resize(pagmap, (oriImg.shape[1], oriImg.shape[0]), interpolation=cv.INTER_CUBIC)
     
@@ -168,7 +178,7 @@ def applyModel(oriImg, param, sym, arg_params, aux_params):
     multiplier = [x * boxsize / oriImg.shape[0] for x in scale_search]
     '''
     boxsize = 368.0
-    scale_search = [0.5, 1, 1.5]
+    scale_search = [0.5, 1,1.2]
     
     multiplier = [x * boxsize*1.0/ oriImg.shape[0] for x in scale_search 
                   if x * boxsize*1.0/ oriImg.shape[0]*oriImg.shape[1]<1500]
@@ -190,7 +200,8 @@ def applyModel(oriImg, param, sym, arg_params, aux_params):
             # print(pagmap.shape)
             heatmap_avg = heatmap_avg + heatmap / len(multiplier)
             pag_avg = pag_avg + pagmap / len(multiplier)
-        except:
+        except Exception as e:
+            logging.exception(e)
             print cscale*oriImg.shape[0], cscale*oriImg.shape[1]
         # print 'add one layer'
     return heatmap_avg, pag_avg
@@ -372,7 +383,7 @@ def connect56LineVec(oriImg, param, sym, arg_params, aux_params):
 
 # Load parameters
 from resnet_v1_101_deeplab_deconv import get_symbol
-sym = get_symbol(is_train=False, numberofparts=20, numberoflinks=19)
+sym = get_symbol(is_train=False, numberofparts=288, numberoflinks=608//2)
 from train_deeplab import SAVE_PREFIX
 import sys
 _, arg_params, aux_params = mx.model.load_checkpoint(SAVE_PREFIX + "final", int(sys.argv[1]))

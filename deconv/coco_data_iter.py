@@ -22,7 +22,7 @@ class DataIter(Dataset):
         self.coco_kps = coco
         self.NUM_PARTS=18
         self.NUM_LINKS=19
-        self.HEAT_RADIUS = 12
+        self.HEAT_RADIUS = 6
         self.PART_LINE_WIDTH=10
     def __len__(self):
         return len(self.imgIds)
@@ -126,11 +126,15 @@ class DataIter(Dataset):
         img_ori,heatmaps,pafmaps,loss_mask = self.im_transpose(img_ori, heatmaps, pafmaps, loss_mask, axes=(1,2,0))
         img_ori,heatmaps,pafmaps,loss_mask = self.im_resize(img_ori, heatmaps, pafmaps, loss_mask)
         img_ori,heatmaps,pafmaps,loss_mask = self.im_crop(img_ori, heatmaps, pafmaps, loss_mask)
-#         heatmaps = cv2.resize(heatmaps,(46,46))
-#         pafmaps = cv2.resize(pafmaps,(46,46))
-#         loss_mask = cv2.resize(loss_mask,(46,46))
-#         loss_mask = loss_mask[:,:,np.newaxis]
+        
+        dest_size = (184,184)
+        heatmaps = cv2.resize(heatmaps,dest_size)
+        heatmaps = cv2.GaussianBlur(heatmaps,(3,3),1)
+        pafmaps = cv2.resize(pafmaps,dest_size)
+        loss_mask = cv2.resize(loss_mask,dest_size)
+        loss_mask = loss_mask[:,:,np.newaxis]
 #         img_ori,heatmaps,pafmaps,loss_mask = self.im_transpose(img_ori, heatmaps, pafmaps, loss_mask, axes=(2,0,1))      
+
         heatmaps = self.im_shrink(heatmaps)
         pafmaps = self.im_shrink(pafmaps)
         loss_mask = self.im_shrink(loss_mask)
@@ -165,22 +169,41 @@ class DataIter(Dataset):
                 [img_ori,heatmaps,pafmaps,loss_mask]))        
         return img_ori,heatmaps,pafmaps,loss_mask
     def im_reshape(self,im):
-        assert im.shape[0] == 368 and im.shape[1] == 368
+        stride = (4,4)
+        assert im.shape[0] %stride[0]==0 and im.shape[1] %stride[0] == 0
         assert len(im.shape) == 2
-        shape_dest = (64,46,46)
+        shape_dest = (stride[0]*stride[1],im.shape[0]//stride[0],im.shape[1]//stride[1])
         r = np.zeros(shape = shape_dest,dtype = im.dtype)
-        for m in range(46):
-            for n in range(46):
-                stride = (8,8)
+        for m in range(shape_dest[1]):
+            for n in range(shape_dest[2]):
                 r[:,m,n] = im[m*stride[0]:(m+1)*stride[0],n*stride[1]:(n+1)*stride[1]].reshape((-1,))
+
         return r
+    
     def im_shrink(self,im):
         r = []
-        assert im.shape[0] == 368 and im.shape[1] == 368 
         assert im.shape[2] >= 1 and len(im.shape) == 3
         for i in range(im.shape[2]):
             r.append(self.im_reshape(im[:,:,i]))
-        return np.concatenate(r,axis = 0)
+        
+        r = np.concatenate(r,axis = 0)
+
+        return r
+    @staticmethod
+    def im_expand(im):
+        stride = (4,4)
+        mul = stride[0] * stride[1]
+
+        assert len(im.shape)==3
+        assert im.shape[0] %mul == 0
+        shape_dest = (im.shape[1]*stride[0],im.shape[2]*stride[1],im.shape[0]//stride[0]//stride[1])
+        r = np.zeros(shape = shape_dest)
+        for n_img in range(shape_dest[2]):
+            for m in range(im.shape[1]):
+                for n in range(im.shape[2]):
+                    r[m*stride[0]:(m+1)*stride[0],
+                      n*stride[1]:(n+1)*stride[1],n_img] = im[mul*n_img:mul*(n_img + 1),m,n].reshape(stride)
+        return r
 def collate_fn(batch):
     imgs_batch = []
     heatmaps_batch = []

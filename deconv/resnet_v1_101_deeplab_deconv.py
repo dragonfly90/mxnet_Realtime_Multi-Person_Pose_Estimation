@@ -854,10 +854,10 @@ def get_symbol(is_train = True,numberofparts = 19,numberoflinks = 19):
 
         loss2 = ((paf_p - pafmaps) ** 2)
         loss2  = mx.symbol.broadcast_mul(loss2 , loss_mask)# 
-        loss2 = mx.sym.sum(loss2/(numberoflinks * 2 * 23 * 23) ) 
+        loss2 = mx.sym.sum(loss2/(numberoflinks * 2 * 23 * 23) ) * 0.01
 #     
 #         loss2 = loss2
-        return mx.symbol.Group([mx.symbol.MakeLoss(loss1),mx.symbol.MakeLoss(loss2),mx.symbol.BlockGrad(loss_mask_sum),mx.symbol.BlockGrad(paf_p)])
+        return mx.symbol.Group([mx.symbol.MakeLoss(loss1),mx.symbol.MakeLoss(loss2)])
     else:
         return mx.symbol.Group([heat_p,paf_p])
 if __name__ == "__main__":
