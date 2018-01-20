@@ -24,3 +24,5 @@ deeplab/plot\.gv
 deeplab/plot\.gv\.pdf
 
 deconv/plot\.gv
+
+\.settings/
