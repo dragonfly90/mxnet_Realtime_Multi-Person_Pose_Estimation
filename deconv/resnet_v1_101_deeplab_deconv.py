@@ -25,9 +25,8 @@ class resnet_v1_101_deeplab():
         bn_conv1 = mx.symbol.BatchNorm(name='bn_conv1', data=conv1, use_global_stats=True, fix_gamma=False, eps = self.eps)
         scale_conv1 = bn_conv1
         conv1_relu = mx.symbol.Activation(name='conv1_relu', data=scale_conv1, act_type='relu')
-#         pool1 = mx.symbol.Pooling(name='pool1', data=conv1_relu, pooling_convention='full', pad=(0, 0), kernel=(3, 3),
-#                                   stride=(2, 2), pool_type='max')
-        pool1 = conv1_relu
+        pool1 = mx.symbol.Pooling(name='pool1', data=conv1_relu, pooling_convention='full', pad=(0, 0), kernel=(3, 3),
+                                  stride=(2, 2), pool_type='max')
         res2a_branch1 = mx.symbol.Convolution(name='res2a_branch1', data=pool1, num_filter=256, pad=(0, 0),
                                               kernel=(1, 1), stride=(1, 1), no_bias=True)
         bn2a_branch1 = mx.symbol.BatchNorm(name='bn2a_branch1', data=res2a_branch1, use_global_stats=True,
@@ -726,7 +725,7 @@ class resnet_v1_101_deeplab():
         scale5c_branch2c = bn5c_branch2c
         res5c = mx.symbol.broadcast_add(name='res5c', *[res5b_relu, scale5c_branch2c])
         res5c_relu = mx.symbol.Activation(name='res5c_relu', data=res5c, act_type='relu')
-        return res5c_relu
+        return res5c_relu,conv1_relu
 
     def get_train_symbol(self, num_classes):
         """
@@ -826,15 +825,36 @@ class resnet_v1_101_deeplab():
 
         init = mx.init.Initializer()
         init._init_bilinear('upsample_weight', arg_params['upsampling_weight'])
+    def deconv(self,data,num_classes,body_b,name_prefx = ""):
+        fix_gamma = True
+        eps = 1e-5
+        no_bias = True
+        BatchNorm = mx.symbol.BatchNorm
+        ngf = num_classes
+        g1 = mx.sym.Deconvolution(data, name=name_prefx+'g1', kernel=(4,4), num_filter=ngf*32, no_bias=no_bias)
+        gbn1 = BatchNorm(g1, name=name_prefx + 'gbn1', fix_gamma=fix_gamma, eps=eps)
+        gact1 = mx.sym.Activation(gbn1,  act_type='relu')
+    
+        g2 = mx.sym.Deconvolution(data, name=name_prefx+'g2', 
+                                  kernel=(4,4), stride=(2,2), pad=(1,1), num_filter=ngf*32, no_bias=no_bias)
+        gbn2 = BatchNorm(g2, name=name_prefx + 'gbn2', fix_gamma=fix_gamma, eps=eps)
+        gact2 = mx.sym.Activation(gbn2,  act_type='relu')
+
+        g3 = mx.sym.Deconvolution(gact2, name=name_prefx+'g3', 
+                                  kernel=(4,4), stride=(2,2), pad=(1,1), num_filter=ngf*16, no_bias=no_bias)
+        gbn3 = BatchNorm(g3, name=name_prefx + 'gbn3', fix_gamma=fix_gamma, eps=eps)
+        gact3 = mx.sym.Activation(gbn3,  act_type='relu')
+              
+        g4 = mx.sym.Deconvolution(gact3, name=name_prefx +'g4', 
+                                  kernel=(4,4), stride=(2,2), pad=(1,1), num_filter=num_classes, no_bias=False)
+        g4 = mx.symbol.Crop(*[g4,body_b],h_w = (192,192),center_crop=True)
+        g4 = mx.symbol.sigmoid(g4)
+    
+        return g4        
     def get_body(self,data,numberofparts,numberoflinks):
-        sym_body = self.get_resnet_conv(data)
-        r0 = mx.symbol.Convolution(data=sym_body, kernel=(3, 3), 
-                                  pad=(1, 1), num_filter=numberofparts, name="conv_last_heat",
-                        workspace=self.workspace)
-        r0 = mx.symbol.sigmoid(r0)
-        r1 = mx.symbol.Convolution(data=sym_body, kernel=(3,3), 
-                                  pad=(1, 1), num_filter=numberoflinks * 2, name="conv_last_paf",
-                        workspace=self.workspace)
+        sym_body,sym_for_shape = self.get_resnet_conv(data)
+        r0 = self.deconv(sym_body, numberofparts, sym_for_shape,name_prefx = "parts_")
+        r1 = self.deconv(sym_body, numberoflinks*2, sym_for_shape,name_prefx= "links_")
         return r0,r1
 
 def get_symbol(is_train = True,numberofparts = 19,numberoflinks = 19):
@@ -849,23 +869,27 @@ def get_symbol(is_train = True,numberofparts = 19,numberoflinks = 19):
         loss1 = (heatmaps * mx.symbol.log(heat_p + 1e-6) + (1-heatmaps) * mx.symbol.log(1 - heat_p + 1e-6))
         loss_mask_sum = mx.symbol.sum(loss_mask) + 10
         loss1  = mx.symbol.broadcast_mul(loss1 , loss_mask)
-        loss1 = mx.sym.sum(-1 * loss1)/(numberofparts)
-        loss1  = loss1 /loss_mask_sum
+        loss1 = mx.sym.sum(-1 * loss1)/(numberofparts * 184 * 184)
+        loss1  = loss1 
 
         loss2 = ((paf_p - pafmaps) ** 2)
         loss2  = mx.symbol.broadcast_mul(loss2 , loss_mask)# 
-        loss2 = mx.sym.sum(loss2/(numberoflinks * 2 * 23 * 23) ) * 0.01
+        loss2 = mx.sym.sum(loss2/(numberoflinks * 2 * 184 * 184) )
+
 #     
 #         loss2 = loss2
-        return mx.symbol.Group([mx.symbol.MakeLoss(loss1),mx.symbol.MakeLoss(loss2)])
+        return mx.symbol.Group([mx.symbol.MakeLoss(loss1),mx.symbol.MakeLoss(loss2),mx.symbol.BlockGrad(heat_p)])
     else:
         return mx.symbol.Group([heat_p,paf_p])
 if __name__ == "__main__":
     BATCH_SIZE = 1
-    input_shape = (368,368)
+    stride = (2,2)
+    img_shape = (368,368)
+    input_shape = (368//stride[0],368//stride[1])
     NUM_LINKS = 19
     NUM_PARTS =  19
-    shapes = data_shapes=[('data', (BATCH_SIZE, 3,input_shape[0],input_shape[1])),
+
+    shapes = data_shapes=[('data', (BATCH_SIZE, 3,img_shape[0],img_shape[1])),
                           ("heatmaps",(BATCH_SIZE,NUM_PARTS ,input_shape[0],input_shape[1])),
                            ("pafmaps",(BATCH_SIZE,NUM_LINKS*2 ,input_shape[0],input_shape[1])),
                            ("loss_mask",(BATCH_SIZE,1 ,input_shape[0],input_shape[1])),

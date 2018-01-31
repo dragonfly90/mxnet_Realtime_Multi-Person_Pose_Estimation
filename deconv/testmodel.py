@@ -4,7 +4,7 @@
 '''
 
 from tensorboardX import SummaryWriter
-from data_iter import getDataLoader
+from coco_data_iter import getDataLoader
 from resnet_v1_101_deeplab_deconv import get_symbol
 import mxnet as mx
 import logging,os,cv2
@@ -13,8 +13,8 @@ import matplotlib.pyplot as plt
 BATCH_SIZE = 1
 NUM_LINKS = 608//2
 NUM_PARTS =  288
-SAVE_PREFIX = "models/resnet-101"
-EPOCH =5600
+SAVE_PREFIX = "models/resnet-101final"
+EPOCH =25
 PRETRAINED_PREFIX = "pre/deeplab_cityscapes"
 LOGGING_DIR = "logs"
 def load_checkpoint(prefix, epoch):
@@ -33,8 +33,8 @@ def load_checkpoint(prefix, epoch):
 def test():
     input_shape = (368,368)
     sym = get_symbol(is_train = False, numberofparts = NUM_PARTS, numberoflinks= NUM_LINKS)
-    model = mx.mod.Module(symbol=sym, context=[mx.cpu(1)],label_names  = ["label"])
-    model.bind(data_shapes=[('data', (BATCH_SIZE, 3,input_shape[0],input_shape[1]))],
+    model = mx.mod.Module(symbol=sym, context=[mx.gpu(0)],label_names  = ["label"])
+    model.bind(data_shapes=[('data', (1, 3,input_shape[0],input_shape[1]))],
                )        
     args,auxes = load_checkpoint(SAVE_PREFIX,EPOCH)
     model.init_params(arg_params=args, aux_params=auxes, allow_missing=False,allow_extra = True)

@@ -22,7 +22,7 @@ class DataIter(Dataset):
         self.coco_kps = coco
         self.NUM_PARTS=18
         self.NUM_LINKS=19
-        self.HEAT_RADIUS = 6
+        self.HEAT_RADIUS = 10
         self.PART_LINE_WIDTH=10
     def __len__(self):
         return len(self.imgIds)
@@ -120,7 +120,7 @@ class DataIter(Dataset):
         pafmaps = np.array(pafmaps)
         pafmaps[np.where(pafmaps_count!=0)] /= pafmaps_count[np.where(pafmaps_count!=0)]
         heatmaps = np.array(heatmaps)
-#         heatmaps = np.concatenate([heatmaps,np.max(heatmaps,axis = 0)[np.newaxis,:,:],img_human_seg[np.newaxis,:,:]])
+        heatmaps = np.concatenate([heatmaps,np.max(heatmaps,axis = 0)[np.newaxis,:,:],img_human_seg[np.newaxis,:,:]])
         loss_mask = loss_mask[np.newaxis,:,:]
         
         img_ori,heatmaps,pafmaps,loss_mask = self.im_transpose(img_ori, heatmaps, pafmaps, loss_mask, axes=(1,2,0))
@@ -129,20 +129,17 @@ class DataIter(Dataset):
         
         dest_size = (184,184)
         heatmaps = cv2.resize(heatmaps,dest_size)
-        heatmaps = cv2.GaussianBlur(heatmaps,(3,3),1)
+#         heatmaps = cv2.GaussianBlur(heatmaps,(3,3),1)
         pafmaps = cv2.resize(pafmaps,dest_size)
         loss_mask = cv2.resize(loss_mask,dest_size)
         loss_mask = loss_mask[:,:,np.newaxis]
-#         img_ori,heatmaps,pafmaps,loss_mask = self.im_transpose(img_ori, heatmaps, pafmaps, loss_mask, axes=(2,0,1))      
+        img_ori,heatmaps,pafmaps,loss_mask = self.im_transpose(img_ori, heatmaps, pafmaps, loss_mask, axes=(2,0,1))      
 
-        heatmaps = self.im_shrink(heatmaps)
-        pafmaps = self.im_shrink(pafmaps)
-        loss_mask = self.im_shrink(loss_mask)
+
         loss_mask = np.min(loss_mask,axis = 0)[np.newaxis,:,:]
         
-        img_ori = np.transpose(img_ori,axes = (2,0,1))
         heatmaps[np.where(heatmaps>=0.999)] = 0.999
-        heatmaps[np.where(heatmaps<=0.001)] = 0.001
+        heatmaps[np.where(heatmaps<0)] = 0
         return img_ori,heatmaps,pafmaps,loss_mask
     def im_transpose(self,img_ori,heatmaps,pafmaps,loss_mask,axes = (2,1,0)):
         img_ori,heatmaps,pafmaps,loss_mask = list(
@@ -204,6 +201,23 @@ class DataIter(Dataset):
                     r[m*stride[0]:(m+1)*stride[0],
                       n*stride[1]:(n+1)*stride[1],n_img] = im[mul*n_img:mul*(n_img + 1),m,n].reshape(stride)
         return r
+def draw_heatmap(heatmap,img=None):
+    _,axes = plt.subplots(4,5,figsize=(35,28))
+    plt.subplots_adjust(wspace = 0,hspace = 0.15)
+    for i in range(5):
+        for j in range(4):
+            index = i*5+j                
+            if index < heatmap.shape[0]:
+#                 heatmap[index,:,:][0,0] = 1
+                axes[j][i].imshow(heatmap[index,:,:])
+            elif index == heatmap.shape[0]:
+                axes[j][i].title.set_text("max")
+                axes[j][i].imshow(np.max(heatmap,axis = 0))                    
+            elif img is not None and index == heatmap.shape[0]+1:
+                axes[j][i].title.set_text("img")
+                axes[j][i].imshow(img)
+            else:
+                axes[j][i].imshow(heatmap[-1,:,:])
 def collate_fn(batch):
     imgs_batch = []
     heatmaps_batch = []
@@ -230,12 +244,16 @@ if __name__ == '__main__':
         da = data_iter[i]
         for d in da:
             print(d.shape)
+        draw_heatmap(da[1])
+        plt.show()
         x = list(map(lambda x: np.transpose(x,(1,2,0)) if len(x.shape) > 2 else x, da))
+        
         fig, axes = plt.subplots(2, len(x)//2 + len(x)%2, figsize=(45, 45),
                              subplot_kw={'xticks': [], 'yticks': []})
         fig.subplots_adjust(hspace=0.3, wspace=0.05) 
  
         count = 0
+       
         for j in range(len(axes)):
             for i in range(len(axes[0])):
                 try:
